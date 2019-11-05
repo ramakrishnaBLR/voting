@@ -1,0 +1,2783 @@
+Option Explicit
+Dim StrPassWord As String
+Dim removeflg As Integer
+Public Function PCIntToStringMonths(cellValue As String) As String
+If IsNumeric(cellValue) Then
+cellValue = cellValue - 1
+Dim strMonths() As Variant
+    strMonths() = Array("Jan", "Feb", " Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+PCIntToStringMonths = CStr(strMonths(cellValue))
+Else
+PCIntToStringMonths = Format(cellValue, "DD") & "-" & PCIntToStringMonths(Format(cellValue, "MM")) & "-" & Format(cellValue, "YYYY")
+End If
+End Function
+Public Function PCValFunction(ByVal strAttributeValue As String) As Double
+strAttributeValue = Val(strAttributeValue)
+PCValFunction = strAttributeValue
+End Function
+Public Function PCStringToDate(ByVal strValue As String) As Date
+Dim convertedDate As Date
+convertedDate = CDate(FormatDateTime(Mid(strValue, 1, 10)))
+PCStringToDate = convertedDate
+End Function
+Public Function LockAirborneSection() As String()
+Dim cellobj As Name, cellName As String
+ 
+   For Each cellobj In ActiveWorkbook.Names
+    cellName = cellobj.Name
+    If InStr(1, cellName, "Forms", vbTextCompare) > 0 Then
+        With ActiveWorkbook.Names(cellName).RefersToRange
+          Range(cellName).Select
+            If cellName Like "*Forms.MN.DR.GSP.*" Then
+              .Interior.Color = &HC0C0C0
+              .MergeCells = False
+              .Locked = True
+              Selection.MergeCells = True
+            End If
+            If cellName Like "*Forms.MN.DR.IP.*" Then
+              .Interior.Color = &HC0C0C0
+              .MergeCells = False
+              .Locked = True
+              Selection.MergeCells = True
+              End If
+            If cellName Like "*Forms.MN.DR.AD.*" Then
+              .Interior.Color = &HC0C0C0
+              .MergeCells = False
+              .Locked = True
+              Selection.MergeCells = True
+              End If
+            If cellName Like "*Forms.MN.DR.EP.*" Then
+              .Interior.Color = &HC0C0C0
+              .MergeCells = False
+              .Locked = True
+              Selection.MergeCells = True
+              End If
+        End With
+    End If
+Next
+Exit Function
+
+End Function
+Public Sub OperationSummaryAdding(ByVal sheetname As String, ByVal MaxRowName As String, ByVal MinRowName As String, ByVal NextIndxName As String, ByVal InsertRange As String, ByVal InsertSubRanges As String, ByVal Names As String, ByVal RefersTo As String, ByVal SavedSheetName As String, ByVal TrackerAdd As String, ByVal OPSummary As String, ByVal CellIndex As String)
+    Dim lMaxRowValue As Long, lNextIndx As Long, lMinRowValue As Long, CellplacingIndex As Long
+    Dim strRow As String, strCol As String, strMaxRange As String, strRange As String, lSavedSheetName As String
+        
+    Dim arDynamicElem, strSubRanges, subRanges, arnames, arRefersTo, Add1
+   
+    Sheets(sheetname).Select
+    Application.ScreenUpdating = False
+    
+    CellplacingIndex = ActiveWorkbook.Names(CellIndex).RefersToRange
+    lMaxRowValue = ActiveWorkbook.Names(MaxRowName).RefersToRange + 1
+    lNextIndx = ActiveWorkbook.Names(NextIndxName).RefersToRange
+    lMinRowValue = ActiveWorkbook.Names(MinRowName).RefersToRange
+    lSavedSheetName = ActiveWorkbook.Names(SavedSheetName).RefersToRange
+    strRange = ActiveWorkbook.Names(InsertRange).RefersToRange
+    strMaxRange = Replace(strRange, "-ROWNO", lMaxRowValue)
+        
+    Range(strMaxRange).Select
+    Selection.EntireRow.Insert
+    
+    strSubRanges = ActiveWorkbook.Names(InsertSubRanges).RefersToRange
+    subRanges = Replace(strSubRanges, "-ROWNO", lMaxRowValue)
+    
+    arDynamicElem = Split(subRanges, ",")
+    Dim i
+    
+    For i = 0 To UBound(arDynamicElem) 'To 0
+        strRow = arDynamicElem(i)
+        Range(strRow).Select
+        If i = CellplacingIndex Then
+            ActiveCell.FormulaR1C1 = ActiveWorkbook.Names(TrackerAdd).RefersToRange
+        End If
+        With Selection
+       
+        .HorizontalAlignment = xlGeneral
+        .VerticalAlignment = xlBottom
+        .WrapText = True
+        .AddIndent = False
+        .ShrinkToFit = False
+        .MergeCells = False
+        .Borders.LineStyle = xlContinuous
+       
+        End With
+        Selection.Merge
+        Selection.Locked = False
+    Next i
+    
+    arnames = Split(ActiveWorkbook.Names(Names).RefersToRange, ",")
+    arRefersTo = Split(ActiveWorkbook.Names(RefersTo).RefersToRange, ",")
+    
+    Dim strName
+    For i = 0 To UBound(arnames)
+        strRow = Replace(arRefersTo(i), "-ROWNO", lMaxRowValue)
+        strName = Replace(arnames(i), "ReplaceIndx", lNextIndx)
+        ActiveWorkbook.Names.Add Name:=strName, RefersToR1C1:="=" & strRow
+    Next i
+    
+    ActiveWorkbook.Names(MaxRowName).RefersToRange = lMaxRowValue
+    ActiveWorkbook.Names(NextIndxName).RefersToRange = lNextIndx + 1
+    ActiveWorkbook.Names(OPSummary).RefersToRange = ActiveWorkbook.Names(OPSummary).RefersToRange & lNextIndx & ","
+    ActiveWorkbook.Names(TrackerAdd).RefersToRange = ActiveWorkbook.Names(TrackerAdd).RefersToRange - 1
+   
+    Application.ScreenUpdating = True
+End Sub
+Public Sub OperationSummaryAdding1(ByVal sheetname As String, ByVal MaxRowName As String, ByVal MinRowName As String, ByVal NextIndxName As String, ByVal InsertRange As String, ByVal InsertSubRanges As String, ByVal Names As String, ByVal RefersTo As String, ByVal SavedSheetName As String, ByVal TrackerAdd As String, ByVal OPSummary As String, ByVal CellIndex As String, returnflg As Integer)
+    returnflg = 0
+    
+    Dim lMaxRowValue As Long, lNextIndx As Long, lMinRowValue As Long, CellplacingIndex As Long
+    Dim strRow As String, strCol As String, strMaxRange As String, strRange As String, lSavedSheetName As String, strSubRanges As String
+    Dim SurveyName As String, DomainId As String, SurDomainId As String, UnitsDomainId As String, unitsname As String, strIndxRanges As String, subRanges As String
+    Dim arnames, arRefersTo, Add1
+        
+    Dim arDynamicElem, nulflg
+    Dim objCombo As Object, objUnits As Object
+       
+    Sheets(sheetname).Select
+    Application.ScreenUpdating = False
+    
+    Set objCombo = Worksheets(sheetname).surveyCombo
+    If objCombo = "" Then
+        SurveyName = ""
+        SurDomainId = ""
+    ElseIf objCombo.listindex = -1 Then
+        SurveyName = CStr(objCombo.Text)
+        SurDomainId = ""
+    Else
+        SurveyName = CStr(objCombo.List(objCombo.listindex, 0))
+        SurDomainId = CStr(objCombo.List(objCombo.listindex, 1))
+    End If
+        
+    Set objUnits = Worksheets(sheetname).unitsCombo
+    If objUnits = "" Then
+        unitsname = ""
+        UnitsDomainId = ""
+    ElseIf objUnits.listindex = -1 Then
+        unitsname = CStr(objUnits.Text)
+        UnitsDomainId = ""
+    Else
+        unitsname = CStr(objUnits.List(objUnits.listindex, 0))
+        UnitsDomainId = CStr(objUnits.List(objUnits.listindex, 1))
+    End If
+        
+    strIndxRanges = ActiveWorkbook.Names(OPSummary).RefersToRange
+    arDynamicElem = Split(strIndxRanges, ",")
+    
+    Dim i As Integer
+    Dim lindex As Integer
+    For i = 0 To UBound(arDynamicElem) - 1
+        lindex = arDynamicElem(i)
+        If ((SurveyName <> "") Or (unitsname <> "")) Then
+        If (ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.DQ.").RefersToRange = SurveyName) Then
+            Exit Sub
+        End If
+        End If
+    Next
+    
+    CellplacingIndex = ActiveWorkbook.Names(CellIndex).RefersToRange
+    lMaxRowValue = ActiveWorkbook.Names(MaxRowName).RefersToRange + 1
+    lNextIndx = ActiveWorkbook.Names(NextIndxName).RefersToRange
+    lMinRowValue = ActiveWorkbook.Names(MinRowName).RefersToRange
+    lSavedSheetName = ActiveWorkbook.Names(SavedSheetName).RefersToRange
+    strRange = ActiveWorkbook.Names(InsertRange).RefersToRange
+    strMaxRange = Replace(strRange, "-ROWNO", lMaxRowValue)
+    
+    If (lMaxRowValue - lMinRowValue < 3) Then
+    For i = 0 To UBound(arDynamicElem) - 1
+        lindex = arDynamicElem(i)
+        If (ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.DQ.").RefersToRange = "" And ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.UNT.").RefersToRange = "") Then
+        If ((SurveyName <> "") Or (unitsname <> "")) Then
+            ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.DQ.").RefersToRange = SurveyName
+            If (ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.DQ.").RefersToRange <> "") Then
+            
+            ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.DQ.").RefersToRange.Select
+            Selection.Locked = True
+            End If
+              
+            ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.DDOMAINID.").RefersToRange = SurDomainId
+            ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.UNT.").RefersToRange = unitsname
+            'ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.DHID.").RefersToRange = ActiveWorkbook.Names(TrackerAdd).RefersToRange
+            ActiveWorkbook.Names(TrackerAdd).RefersToRange = ActiveWorkbook.Names(TrackerAdd).RefersToRange - 1
+            If (ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.UNT.").RefersToRange <> "") Then
+            
+            ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.UNT.").RefersToRange.Select
+            Selection.Locked = True
+            End If
+            
+            ActiveWorkbook.Names("Forms.MN.DR.DH\" & lindex & "\DJ.UDOMAINID.").RefersToRange = UnitsDomainId
+            Exit Sub
+         End If
+        End If
+    Next
+    End If
+        
+    Range(strMaxRange).Select
+    Selection.EntireRow.Insert
+    
+    strSubRanges = ActiveWorkbook.Names(InsertSubRanges).RefersToRange
+    subRanges = Replace(strSubRanges, "-ROWNO", lMaxRowValue)
+    
+    arDynamicElem = Split(subRanges, ",")
+           
+    For i = 0 To UBound(arDynamicElem) 'To 0
+       
+        strRow = arDynamicElem(i)
+        Range(strRow).Select
+        If i = CellplacingIndex Then
+            ActiveCell.FormulaR1C1 = ActiveWorkbook.Names(TrackerAdd).RefersToRange
+        End If
+        With Selection
+           .HorizontalAlignment = xlGeneral
+            .VerticalAlignment = xlBottom
+            .WrapText = True
+            .AddIndent = False
+            .ShrinkToFit = False
+            .MergeCells = False
+            .Borders.LineStyle = xlContinuous
+       
+        End With
+        Selection.Merge
+        Selection.Locked = False
+       
+    Next i
+    arnames = Split(ActiveWorkbook.Names(Names).RefersToRange, ",")
+    arRefersTo = Split(ActiveWorkbook.Names(RefersTo).RefersToRange, ",")
+    
+    Dim strName
+    
+    For i = 0 To UBound(arnames)
+        strRow = Replace(arRefersTo(i), "-ROWNO", lMaxRowValue)
+        strName = Replace(arnames(i), "ReplaceIndx", lNextIndx)
+        ActiveWorkbook.Names.Add Name:=strName, RefersToR1C1:="=" & strRow
+        
+        ActiveWorkbook.Names(strName).RefersToRange.Select
+        If i = 0 Then
+            Selection = SurveyName
+            If (SurveyName <> "") Then
+                Selection.Locked = True
+            End If
+        ElseIf i = 1 Then
+            Selection = unitsname
+            If (unitsname <> "") Then
+                Selection.Locked = True
+            End If
+        ElseIf i = 3 Then
+        Selection.Formula = "=E" & ActiveWorkbook.Names(strName).RefersToRange.Row & "+" & "M" & ActiveWorkbook.Names(strName).RefersToRange.Row
+        Selection.Locked = True
+        ElseIf i = 4 Then
+        Selection.Formula = "=E" & ActiveWorkbook.Names(strName).RefersToRange.Row & "+" & "N" & ActiveWorkbook.Names(strName).RefersToRange.Row
+        Selection.Locked = True
+        ElseIf i = 5 Then
+        Selection.Formula = "=E" & ActiveWorkbook.Names(strName).RefersToRange.Row & "+" & "O" & ActiveWorkbook.Names(strName).RefersToRange.Row
+        Selection.Locked = True
+        ElseIf i = 6 Then
+        'Add = ActiveWorkbook.Names("Forms.MN.DR.OJ.EE.EL.").RefersToRange.Address
+        Add1 = "H" & ActiveWorkbook.Names(strName).RefersToRange.Row
+        Selection.Formula = "=IF(AE3=""""," & Add1 & ",IF(AE2-AE3+1=0,0," & Add1 & "/(AE2-AE3+1)))"
+        Selection.Locked = True
+        End If
+    Next i
+         
+    ActiveWorkbook.Names(MaxRowName).RefersToRange = lMaxRowValue
+    ActiveWorkbook.Names(NextIndxName).RefersToRange = lNextIndx + 1
+    ActiveWorkbook.Names(OPSummary).RefersToRange = ActiveWorkbook.Names(OPSummary).RefersToRange & lNextIndx & ","
+    ActiveWorkbook.Names(TrackerAdd).RefersToRange = ActiveWorkbook.Names(TrackerAdd).RefersToRange - 1
+    returnflg = 1
+    Application.ScreenUpdating = True
+   
+End Sub
+Public Sub SummaryOppRemove1(ByVal sheetname As String, ByVal MaxRowName As String, ByVal MinRowName As String, ByVal NextIndxName As String, ByVal InsertRange As String, ByVal InsertSubRanges As String, ByVal Names As String, ByVal RefersTo As String, ByVal SavedSheetName As String, ByVal OPSummary As String, ByVal StartCell As String, ByVal SubNames As String, ByVal SubNamesCount As String, returnflg As Integer)
+    Dim lColCount As Long, lRowNum As Long, lColNum As Long, lMinRowValue As Long
+    Dim lMaxRowValue As Long, lDeletedCellIndx As Long, lSubNamesCount As Long
+    Dim strErrMessage As String, strSelRow As String, strInsertRowNameValue As String, lSavedSheetName As String, lSubNames  As String
+    Dim strFirstPart As String, strSecondPart As String, strRefersTo As String, lstartcell As String
+    Dim objSelRange As Range, strRange, strMaxRange, arnames, arRefersTo, strRow, strName
+    Dim iDeleteRows, i As Integer
+    
+    Set objSelRange = Selection
+    
+    Sheets(sheetname).Select
+    Application.ScreenUpdating = False
+    
+    lColCount = objSelRange.Columns.Count
+    lRowNum = objSelRange.Row
+    lColNum = objSelRange.Column
+    
+    lMaxRowValue = ActiveWorkbook.Names(MaxRowName).RefersToRange
+    strInsertRowNameValue = ActiveWorkbook.Names(OPSummary).RefersToRange
+    lSavedSheetName = ActiveWorkbook.Names(SavedSheetName).RefersToRange
+    lSubNamesCount = ActiveWorkbook.Names(SubNamesCount).RefersToRange
+    lSubNames = ActiveWorkbook.Names(SubNames).RefersToRange
+    
+    lMinRowValue = ActiveWorkbook.Names(MinRowName).RefersToRange
+    strRange = ActiveWorkbook.Names(InsertRange).RefersToRange
+    strMaxRange = Replace(strRange, "-ROWNO", lRowNum)
+    lstartcell = ActiveWorkbook.Names(StartCell).RefersToRange
+    strErrMessage = ""
+    If (lRowNum < lMinRowValue Or lRowNum > lMaxRowValue) Then strErrMessage = "Please select the row which you want to delete"
+        If lColNum < 256 Then
+            If lColNum < 2 And lColNum > 8 Then
+            strErrMessage = "Please select the row which you want to delete"
+            End If
+        End If
+        If Len(strErrMessage) > 0 Then
+            Exit Sub
+        End If
+        
+        If Not (Len(strErrMessage) > 0) Then
+            If lMaxRowValue - lMinRowValue < 2 Then strErrMessage = "A minimum of five rows must be retained in this form section! - Operations summary"
+        End If
+
+        If Len(strErrMessage) > 0 Then
+           Application.ScreenUpdating = True
+           If (MaxRowName = "AdditionalMaxRow") Then
+                strSelRow = "B" & lRowNum & ":E" & lRowNum
+                Range(strSelRow).Select
+                Selection.ClearContents
+                Selection.Locked = False
+                
+                strSelRow = "K" & lRowNum & ":L" & lRowNum
+                Range(strSelRow).Select
+                Selection.ClearContents
+                Selection.Locked = False
+                
+                strSelRow = "B" & lRowNum
+                Range(strSelRow).Select
+           End If
+           Exit Sub
+        End If
+    
+        strRefersTo = "=" & sheetname & "!$" & lstartcell & "$" & lRowNum
+        strRefersTo = ActiveWorkbook.Names(, , strRefersTo).Name
+        strRefersTo = Mid(strRefersTo, InStr(1, strRefersTo, lSubNames, vbTextCompare) + lSubNamesCount)
+        lDeletedCellIndx = Mid(strRefersTo, 1, InStr(1, strRefersTo, "\") - 1)
+       
+        If InStr(1, strInsertRowNameValue, lDeletedCellIndx & ",") > 1 Then
+            strFirstPart = Mid(strInsertRowNameValue, 1, InStr(1, strInsertRowNameValue, lDeletedCellIndx & ",") - 2)
+        End If
+        strSecondPart = Mid(strInsertRowNameValue, InStr(1, strInsertRowNameValue, lDeletedCellIndx & ",") + Len(lDeletedCellIndx & ","))
+    
+        If Len(strSecondPart) > 0 Then
+            If Len(strFirstPart) > 0 Then
+                strInsertRowNameValue = strFirstPart & "," & strSecondPart
+            Else
+                strInsertRowNameValue = strSecondPart
+            End If
+        Else
+            strInsertRowNameValue = strFirstPart & ","
+        End If
+    
+        ActiveWorkbook.Names(OPSummary).RefersToRange = strInsertRowNameValue
+        ActiveWorkbook.Names(MaxRowName).RefersToRange = lMaxRowValue - 1
+        arnames = Split(ActiveWorkbook.Names(Names).RefersToRange, ",")
+        arRefersTo = Split(ActiveWorkbook.Names(RefersTo).RefersToRange, ",")
+
+        For i = 0 To UBound(arnames)
+            strRow = Replace(arRefersTo(i), "-ROWNO", lMaxRowValue)
+            strName = Replace(arnames(i), "ReplaceIndx", lDeletedCellIndx)
+            ActiveWorkbook.Names(strName).Delete
+        Next i
+   
+        strSelRow = strMaxRange
+        Range(strSelRow).Select
+        Selection.EntireRow.Delete
+        
+        strSelRow = strMaxRange
+        Range(strSelRow).Select
+    
+        If lRowNum = lMaxRowValue Then
+            Selection.Borders(xlDiagonalDown).LineStyle = xlNone
+            Selection.Borders(xlDiagonalUp).LineStyle = xlNone
+            With Selection.Borders(xlEdgeTop)
+                .LineStyle = xlContinuous
+                .Weight = xlThin
+                .ColorIndex = xlAutomatic
+            End With
+        End If
+        returnflg = 1
+        Application.ScreenUpdating = True
+End Sub
+Public Function Tracking1(ByVal OpnOL As Integer) As String
+Dim i As Long
+StrPassWord = "pcrossypf23"
+Dim FormsDocXML As Object, TrackerDocXML As Object, FormsDocXSL As Object
+Dim FormsItems As Object
+Dim FormsElementXML As Object, TrackerElementXML As Object, objElem As Object
+
+On Error GoTo err_trap
+    
+    Dim ValDate
+    ValDate = DateDiff("d", PCStringToDate(Sheet1.Range("O5").Value), PCStringToDate(ActiveWorkbook.Names("Forms.ReportDate.").RefersToRange))
+    
+    Dim RDate
+    RDate = PCIntToStringMonths(ActiveWorkbook.Names("Forms.ReportDate.").RefersToRange)
+    If MsgBox("Are you sure you want to submit the report for " & RDate & "?", vbQuestion + vbYesNo, "Confirm submission of report") = vbNo Then
+       Exit Function
+    End If
+    'Confirm stopcycle of the report
+    If LCase(ActiveWorkbook.Names("StopCycle").RefersToRange) = "yes" Then
+        If MsgBox("Are you sure you want to stop the cycle ", vbQuestion + vbYesNo, "Confirm Stop Cycle") = vbNo Then
+           Exit Function
+        End If
+    End If
+    Dim MndFlds As String
+    
+    MndFlds = "Please enter values for the following fields" & Chr(13)
+    
+     If Trim(ActiveWorkbook.Names("Forms.C.EDC.").RefersToRange) = "" Then
+        MndFlds = MndFlds & "End of Project Date" & Chr(13)
+    End If
+   
+    If (Range("F2").Value) < (Range("AE9").Value) Then
+        MndFlds = MndFlds & "Report Date should not be less than Start Report Date"
+    End If
+    
+    If Trim(ActiveWorkbook.Names("Forms.MN.DR.OJ.EE.EL.").RefersToRange) = "" Then
+        MndFlds = MndFlds & "ProjectTimeSchedule: TotalProduction_Days:  Time in the project" & Chr(13)
+    End If
+    
+    If Trim(ActiveWorkbook.Names("Forms.MN.DR.OJ.EB.EK.").RefersToRange) = "" Then
+        MndFlds = MndFlds & "ProjectTimeSchedule: TotalProduction_Days:  Estimated time to complete survey" & Chr(13)
+    End If
+    
+    If Trim(ActiveWorkbook.Names("Forms.MN.DR.OJ.EM.EZ.").RefersToRange) = "" Then
+        MndFlds = MndFlds & "ProjectTimeSchedule: TotalProduction_Days:  Planned time to complete survey" & Chr(13)
+    End If
+    
+    'If ((ActiveWorkbook.Names("Forms.MN.DR.GT.OD.").RefersToRange > 24) Or (ActiveWorkbook.Names("Forms.MN.DR.GV.QN.").RefersToRange > 24)) Then
+    '    MndFlds = "Total Hours should not exceed more than 24 hours"
+    'End If
+    
+    If MndFlds = "Please enter values for the following fields" & Chr(13) Or MndFlds = "" Then
+        Set FormsDocXML = CreateObject("MSXML.DOMDocument")
+        Set TrackerDocXML = CreateObject("MSXML.DOMDocument")
+    
+        Application.DisplayAlerts = False
+        ActiveWorkbook.Unprotect StrPassWord
+        ActiveSheet.Unprotect StrPassWord
+        ActiveSheet.Select
+        
+        FormsDocXML.async = False
+        FormsDocXML.LoadXML (Worksheets(2).CacheDTDXML.Text)
+        Set FormsElementXML = FormsDocXML.DocumentElement
+        TrackerDocXML.async = False
+        TrackerDocXML.LoadXML "<R/>"
+        
+        Set TrackerElementXML = TrackerDocXML.DocumentElement
+        TrackerElementXML.setAttribute "CONTEXTEMAILID", ActiveWorkbook.Names("ORCHCONTEXTEMAILID").RefersToRange
+        TrackerElementXML.setAttribute "StopCycle", ActiveWorkbook.Names("StopCycle").RefersToRange
+        If FormsElementXML Is Nothing Then Err.Raise -2001, "XML Report", "Invalid XML"
+    
+        Dim sheetname As String, SMaxRow As Integer, VName As String, ChangeIndex As Integer, MainFormName As String
+        SMaxRow = ActiveWorkbook.Names("RowCount").RefersToRange
+        Dim StrNameArr() As Long, k, lindex, strName, strlen1, strRefersTo, StrLen2, ChIndx, ChType, strRefersTone, RmChType, RmStrName
+        'Dim strDhid As Integer
+        k = 0
+        lindex = 0
+        
+        For i = 1 To ActiveWorkbook.Names.Count
+            VName = ActiveWorkbook.Names(i).Name
+            strName = Replace(VName, ".", "$")
+            strlen1 = Len(strName)
+     
+            strRefersTo = Mid(strName, InStr(1, strName, "\", vbTextCompare) + 1)
+            StrLen2 = Len(strRefersTo)
+            If strlen1 <> StrLen2 Then
+                ChangeIndex = Mid(strRefersTo, 1, InStr(1, strRefersTo, "\") - 1)
+                
+                ChIndx = "-" & ChangeIndex
+                ChType = "[-" & ChangeIndex & "]"
+                          
+                strRefersTone = Replace(strRefersTo, ChangeIndex, ChType)
+                strName = Replace(strName, strRefersTo, strRefersTone)
+                strName = Replace(strName, "\", "$")
+                RmChType = "$" & ChType & "$"
+                RmStrName = Replace(strName, RmChType, "$")
+            Else
+                RmStrName = strName
+            End If
+            
+            Set objElem = TrackerDocXML.createElement("I")
+            
+            Set FormsItems = FormsElementXML.SelectSingleNode("I[@N='" & RmStrName & "']")
+            If Not FormsItems Is Nothing Then
+                objElem.setAttribute "T", FormsItems.getAttribute("T")
+                If (FormsItems.getAttribute("T") = "GARSMASTER") Then
+                    objElem.setAttribute "F", 1
+                    objElem.setAttribute "I", ""
+                    If VName = "Forms.C.EDC." Or VName = "Forms.ReportDate." Then
+                        objElem.setAttribute "V", Format(ActiveWorkbook.Names(VName).RefersToRange, "mm\/dd\/yyyy")
+                    Else
+                        If UCase(FormsItems.getAttribute("DY")) = "CLOB" Then
+                            objElem.Text = ActiveWorkbook.Names(VName).RefersToRange
+                        Else
+                            objElem.setAttribute "V", ActiveWorkbook.Names(VName).RefersToRange
+                        End If
+                    End If
+               
+                Else
+                    If InStr(strName, "ID$") > 0 Then
+                        If InStr(strName, "DOMAINID$") > 0 Then
+                            objElem.setAttribute "F", 1
+                            objElem.setAttribute "V", ActiveWorkbook.Names(VName).RefersToRange
+                        Else
+                            objElem.setAttribute "F", 0
+                            objElem.setAttribute "V", ChIndx
+                        End If
+                    Else
+                        objElem.setAttribute "F", 1
+                        If UCase(FormsItems.getAttribute("DY")) = "CLOB" Then
+                            objElem.Text = ActiveWorkbook.Names(VName).RefersToRange
+                        Else
+                            objElem.setAttribute "V", ActiveWorkbook.Names(VName).RefersToRange
+                        End If
+                    End If
+                    objElem.setAttribute "I", ChIndx
+                End If
+              
+              
+                    objElem.setAttribute "X", strName
+                    objElem.setAttribute "C", FormsItems.getAttribute("C")
+                    objElem.setAttribute "FL", -1
+                    objElem.setAttribute "XP", RmStrName
+                    TrackerElementXML.appendChild objElem
+               
+            End If
+        Next i
+        
+        '--------------newly added to include the attached documents and report type
+            
+            Dim objRptElement As Object, lTotalDocRows As Long, iDocsCnt As Integer, strExtractFilename As String, strDocFullPath As String
+            Dim iRptID As Integer, iDocStartCell As Integer, iDocEndCell As Integer
+            Dim rngCol As Range, lMaxRow As Long, lMinRow As Long
+            lMaxRow = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange
+            lMinRow = ActiveWorkbook.Names("DocsMinRow").RefersToRange
+            lTotalDocRows = lMaxRow - lMinRow
+            iDocStartCell = ActiveWorkbook.Names("DocDomainStartCell").RefersToRange 'Cell which contains the
+            iDocEndCell = ActiveWorkbook.Names("DocDomainEndCell").RefersToRange
+            For iDocsCnt = lMinRow To lMaxRow - 1
+                Set objRptElement = TrackerDocXML.createElement("AddDoc")
+                strDocFullPath = Sheet1.Cells.Range("B" & lMinRow).Value
+                strExtractFilename = Right(strDocFullPath, Len(strDocFullPath) - InStrRev(strDocFullPath, "\"))
+                objRptElement.setAttribute "ReportName", strExtractFilename
+                If Not IsEmpty(Sheet1.Cells.Range("I" & lMinRow).Value) And Not IsEmpty(Sheet1.Cells.Range("B" & lMinRow).Value) Then
+                    iRptID = Sheet1.Cells.Range("CA" & iDocStartCell & ":" & "CA" & iDocEndCell).Find(Sheet1.Cells.Range("I" & lMinRow).Value).Cells.Row
+                    objRptElement.setAttribute "ReportTypeID", Sheet1.Cells.Range("CB" & iRptID).Value
+                Else
+                    
+                    objRptElement.setAttribute "ReportTypeID", -1
+                End If
+                
+                TrackerElementXML.appendChild objRptElement
+                lMinRow = lMinRow + 1
+                
+            Next iDocsCnt
+            
+            '--------------
+        'Build the sort xsl
+        Dim strSortXSL As String
+        strSortXSL = "<?xml version=""1.0""?><xsl:stylesheet version=""1.0"" xmlns:xsl=""http://www.w3.org/1999/XSL/Transform"" xmlns:msxsl=""urn:schemas-microsoft-com:xslt"" xmlns:user=""http://mycompany.com/mynamespace"" >" & _
+                                    "<xsl:template match=""/""><R><xsl:for-each select=""R/@*"" >" & _
+                                    "<xsl:variable name =""AttribName""><xsl:value-of select=""local-name()"" /></xsl:variable><xsl:attribute name=""{$AttribName}""><xsl:value-of select=""."" /></xsl:attribute >" & _
+                                    "</xsl:for-each><xsl:for-each select=""R/*"" >"
+    
+        strSortXSL = strSortXSL & "<xsl:sort select=""@F"" order=""ascending""/><xsl:sort select="" @T "" order=""ascending"" /><xsl:sort select="" number(@I) "" order=""descending"" data-type=""number""/>" & _
+                                    "<xsl:text> </xsl:text><xsl:copy-of select="".""></xsl:copy-of>" & _
+                                    "</xsl:for-each></R></xsl:template></xsl:stylesheet>"
+    
+        'Load the xsl
+        Set FormsDocXSL = CreateObject("MSXML.DOMDocument")
+        FormsDocXSL.LoadXML (strSortXSL)
+        If FormsDocXSL.DocumentElement Is Nothing Then Err.Raise 1006, "", "Invalid XML"
+    
+        'Transform the object
+        Dim strFormContent  As String
+        strFormContent = TrackerDocXML.transformNode(FormsDocXSL)
+        strFormContent = Replace(strFormContent, "UTF-16", "UTF-8")
+        Dim XMLPath As String, ActPath As String
+        ActPath = ActiveWorkbook.Path
+        Dim XmlName As String
+        XmlName = Format(ActiveWorkbook.Names("Forms.ReportDate.").RefersToRange, "DD\-MMM\-YYYY") & "_" & ActiveWorkbook.Names("Forms.C.PT").RefersToRange & ".xml"
+        XMLPath = ActPath & "\" & XmlName
+        Dim ContextMailID As String
+        Dim objOL As Object
+        'Set objOL = CreateObject("Outlook.Application")
+        Dim objMail As Object
+        Dim oXMLHTTP As Object
+        Dim GetFolderPath As String
+        Dim TestPath As String
+        'If MndFlds = "Please enter values for the following fields" & Chr(13) Or MndFlds = "" Then
+            ContextMailID = ActiveWorkbook.Names("ORCHCONTEXTEMAILID").RefersToRange
+            If (ActiveWorkbook.Names("DRMODE").RefersToRange = 2) Then
+                TestPath = ActiveWorkbook.Path
+                GetFolderPath = TestPath & "\XML"
+                If (GetFolderPath = "\XML") Then
+                    GetFolderPath = CurDir & "\XML"
+                End If
+                If Dir(GetFolderPath, vbDirectory) = vbNullString Then
+                    MkDir (GetFolderPath)
+                End If
+                Range("B1") = "Please attach the file ''" & GetFolderPath & "\" & XmlName & "'' to the E-Mail if not using Outlook for submission."
+                Range("B1:I1").Select
+                With Selection.Interior
+                    .ColorIndex = 15
+                    .Pattern = xlSolid
+                End With
+                TrackerDocXML.Save (GetFolderPath & "\" & XmlName)
+                If (OpnOL = 1) Then
+                    Set objOL = CreateObject("Outlook.Application")
+                    Set objMail = objOL.CreateItem(0)
+                    '----
+                    Dim DocCnt As Long
+                        DocCnt = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange - ActiveWorkbook.Names("DocsMinRow").RefersToRange
+                        lMinRow = ActiveWorkbook.Names("DocsMinRow").RefersToRange
+                    With objMail
+                        .To = ContextMailID
+                        .Subject = "Geophysical Activity Reporting System"
+                        .attachments.Add GetFolderPath & "\" & XmlName
+                        '.Body = ""
+                        For i = 0 To DocCnt - 1
+                                If Range("B" & lMinRow).Text <> "" Then
+                                    .attachments.Add Range("B" & lMinRow).Text
+                                    lMinRow = lMinRow + 1
+                                End If
+                        Next
+                        .Display
+                    End With
+                    Set objMail = Nothing
+                    Set objOL = Nothing
+                End If
+            Else
+                Dim strDTD As String
+                strDTD = CStr(TrackerDocXML.XML)
+                Set oXMLHTTP = CreateObject("Microsoft.XMLHTTP")
+                On Error GoTo NoConMsg
+                oXMLHTTP.Open "Post", ActiveWorkbook.Names("ServerPath").RefersToRange, False
+                oXMLHTTP.setRequestHeader "Content-Type", "text/xml; charset=""UTF-8"""
+                oXMLHTTP.send (strDTD)
+                Dim ExcelExt As Integer
+                ExcelExt = InStr(1, ActiveWorkbook.FullName, ".xls")
+                MsgBox ("The report for the day " & RDate & " has been submitted")
+                If (ExcelExt > 0) Then
+                    Application.Quit
+                    ThisWorkbook.Close savechanges:=True
+                End If
+            End If
+            Tracking1 = strFormContent
+    Else
+            MsgBox MndFlds
+            ActiveWorkbook.Protect StrPassWord, Structure:=True, Windows:=False
+            ActiveSheet.Protect StrPassWord, DrawingObjects:=True, Contents:=True, Scenarios:=True
+    End If
+    ActiveWorkbook.Protect StrPassWord, Structure:=True, Windows:=False
+    ActiveSheet.Protect StrPassWord, DrawingObjects:=True, Contents:=True, Scenarios:=True
+    Exit Function
+NoConMsg:
+    MsgBox "There is no connection available."
+err_trap:
+    Tracking1 = "Macro Name : Tracking1 " + Err.Description
+End Function
+
+Public Function chk(VName)
+Dim test
+    On Error GoTo this_Skip
+        test = ActiveWorkbook.Names(VName).RefersToRange
+        chk = True
+        Exit Function
+this_Skip:
+chk = False
+End Function
+
+Public Function Tracking() As String
+    Dim i As Long
+    StrPassWord = "pcrossypf23"
+    Dim FormsDocXML As Object, TrackerDocXML As Object, FormsDocXSL As Object
+    Dim FormsItems As Object
+    Dim FormsElementXML As Object, TrackerElementXML As Object, objElem As Object
+
+    On Error GoTo err_trap
+    
+    Set FormsDocXML = CreateObject("MSXML.DOMDocument")
+    Set TrackerDocXML = CreateObject("MSXML.DOMDocument")
+
+    Application.DisplayAlerts = False
+    ActiveWorkbook.Unprotect StrPassWord
+    ActiveSheet.Unprotect StrPassWord
+    ActiveSheet.Select
+    
+    FormsDocXML.async = False
+    FormsDocXML.LoadXML (Worksheets(2).CacheDTDXML.Text)
+    
+    Set FormsElementXML = FormsDocXML.DocumentElement
+    TrackerDocXML.async = False
+    TrackerDocXML.LoadXML "<R/>"
+    
+    Set TrackerElementXML = TrackerDocXML.DocumentElement
+    TrackerElementXML.setAttribute "CONTEXTEMAILID", ActiveWorkbook.Names("ORCHCONTEXTEMAILID").RefersToRange
+    TrackerElementXML.setAttribute "StopCycle", ActiveWorkbook.Names("StopCycle").RefersToRange
+    If FormsElementXML Is Nothing Then Err.Raise -2001, "XML Report", "Invalid XML"
+
+    Dim sheetname As String, SMaxRow As Integer, VName As String, ChangeIndex As Integer, MainFormName As String
+    SMaxRow = ActiveWorkbook.Names("RowCount").RefersToRange
+    Dim StrNameArr() As Long, k, lindex, strName, strlen1, strRefersTo, StrLen2, ChIndx, ChType, strRefersTone, RmChType, RmStrName
+    'Dim strDhid As Integer
+    k = 0
+    lindex = 0
+    
+    For i = 1 To ActiveWorkbook.Names.Count
+        VName = ActiveWorkbook.Names(i).Name
+    If chk(VName) = True Then
+        strName = Replace(VName, ".", "$")
+        strlen1 = Len(strName)
+ 
+        strRefersTo = Mid(strName, InStr(1, strName, "\", vbTextCompare) + 1)
+        StrLen2 = Len(strRefersTo)
+        If strlen1 <> StrLen2 Then
+            ChangeIndex = Mid(strRefersTo, 1, InStr(1, strRefersTo, "\") - 1)
+            
+            ChIndx = "-" & ChangeIndex
+            ChType = "[-" & ChangeIndex & "]"
+                      
+            strRefersTone = Replace(strRefersTo, ChangeIndex, ChType)
+            strName = Replace(strName, strRefersTo, strRefersTone)
+            strName = Replace(strName, "\", "$")
+            RmChType = "$" & ChType & "$"
+            RmStrName = Replace(strName, RmChType, "$")
+        Else
+            RmStrName = strName
+        End If
+        
+        Set objElem = TrackerDocXML.createElement("I")
+        
+        Set FormsItems = FormsElementXML.SelectSingleNode("I[@N='" & RmStrName & "']")
+        If Not FormsItems Is Nothing Then
+            objElem.setAttribute "T", FormsItems.getAttribute("T")
+            If (FormsItems.getAttribute("T") = "GARSMASTER") Then
+                objElem.setAttribute "F", 1
+                objElem.setAttribute "I", ""
+                If VName = "Forms.C.EDC." Then
+                    objElem.setAttribute "V", Format(ActiveWorkbook.Names(VName).RefersToRange, "mm\/dd\/yyyy")
+                Else
+                    If UCase(FormsItems.getAttribute("DY")) = "CLOB" Then
+                        objElem.Text = ActiveWorkbook.Names(VName).RefersToRange
+                    Else
+                        objElem.setAttribute "V", ActiveWorkbook.Names(VName).RefersToRange
+                    End If
+                End If
+             
+            Else
+                If InStr(strName, "ID$") > 0 Then
+                    If InStr(strName, "DOMAINID$") > 0 Then
+                        objElem.setAttribute "F", 1
+                        objElem.setAttribute "V", ActiveWorkbook.Names(VName).RefersToRange
+                    Else
+                        objElem.setAttribute "F", 0
+                        objElem.setAttribute "V", ChIndx
+                    End If
+                Else
+                    objElem.setAttribute "F", 1
+                    If UCase(FormsItems.getAttribute("DY")) = "CLOB" Then
+                        objElem.Text = ActiveWorkbook.Names(VName).RefersToRange
+                    Else
+                        objElem.setAttribute "V", ActiveWorkbook.Names(VName).RefersToRange
+                    End If
+                End If
+                objElem.setAttribute "I", ChIndx
+            End If
+                           
+                objElem.setAttribute "X", strName
+                objElem.setAttribute "C", FormsItems.getAttribute("C")
+                objElem.setAttribute "FL", -1
+                objElem.setAttribute "XP", RmStrName
+                TrackerElementXML.appendChild objElem
+             
+                    
+            
+        End If
+    End If
+    Next i
+    '-----------------------------Documents Attached information
+    Dim lMaxRow As Long, lMinRow As Long
+    Dim objRptElement As Object, lTotalDocRows As Long, iDocsCnt As Integer, strExtractFilename As String, strDocFullPath As String
+    Dim iRptID As Integer, iDocStartCell As Integer, iDocEndCell As Integer
+    
+    lMaxRow = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange
+    lMinRow = ActiveWorkbook.Names("DocsMinRow").RefersToRange
+    lTotalDocRows = lMaxRow - lMinRow
+    iDocStartCell = ActiveWorkbook.Names("DocDomainStartCell").RefersToRange 'Cell which contains the
+    iDocEndCell = ActiveWorkbook.Names("DocDomainEndCell").RefersToRange
+    For iDocsCnt = lMinRow To lMaxRow - 1
+        Set objRptElement = TrackerDocXML.createElement("AddDoc")
+        strDocFullPath = Sheet1.Cells.Range("B" & lMinRow).Value
+        strExtractFilename = Right(strDocFullPath, Len(strDocFullPath) - InStrRev(strDocFullPath, "\"))
+        objRptElement.setAttribute "ReportName", strExtractFilename
+        If Not IsEmpty(Sheet1.Cells.Range("I" & lMinRow).Value) And Not IsEmpty(Sheet1.Cells.Range("B" & lMinRow).Value) Then
+                iRptID = Sheet1.Cells.Range("CA" & iDocStartCell & ":" & "CA" & iDocEndCell).Find(Sheet1.Cells.Range("I" & lMinRow).Value).Cells.Row
+                objRptElement.setAttribute "ReportTypeID", Sheet1.Cells.Range("CB" & iRptID).Value
+        Else
+                
+                objRptElement.setAttribute "ReportTypeID", -1
+        End If
+        'iRptID = Sheet1.Cells.Range("M" & iDocStartCell & ":" & "M" & iDocEndCell).Find(Sheet1.Cells.Range("E" & lMinRow).Value).Cells.Row
+                
+        TrackerElementXML.appendChild objRptElement
+        lMinRow = lMinRow + 1
+        
+    Next iDocsCnt
+    '-----------------------------------------------------------
+    'Build the sort xsl
+    Dim strSortXSL As String
+    strSortXSL = "<?xml version=""1.0""?><xsl:stylesheet version=""1.0"" xmlns:xsl=""http://www.w3.org/1999/XSL/Transform"" xmlns:msxsl=""urn:schemas-microsoft-com:xslt"" xmlns:user=""http://mycompany.com/mynamespace"" >" & _
+                                "<xsl:template match=""/""><R><xsl:for-each select=""R/@*"" >" & _
+                                "<xsl:variable name =""AttribName""><xsl:value-of select=""local-name()"" /></xsl:variable><xsl:attribute name=""{$AttribName}""><xsl:value-of select=""."" /></xsl:attribute >" & _
+                                "</xsl:for-each><xsl:for-each select=""R/*"" >"
+
+    strSortXSL = strSortXSL & "<xsl:sort select=""@F"" order=""ascending""/><xsl:sort select="" @T "" order=""ascending"" /><xsl:sort select="" number(@I) "" order=""descending"" data-type=""number""/>" & _
+                                "<xsl:text> </xsl:text><xsl:copy-of select="".""></xsl:copy-of>" & _
+                                "</xsl:for-each></R></xsl:template></xsl:stylesheet>"
+    'Load the xsl
+    Set FormsDocXSL = CreateObject("MSXML.DOMDocument")
+    FormsDocXSL.LoadXML (strSortXSL)
+    If FormsDocXSL.DocumentElement Is Nothing Then Err.Raise 1006, "", "Invalid XML"
+
+    'Transform the object
+    Dim strFormContent  As String
+    strFormContent = TrackerDocXML.transformNode(FormsDocXSL)
+    strFormContent = Replace(strFormContent, "UTF-16", "UTF-8")
+    Tracking = strFormContent
+    Exit Function
+     
+err_trap:
+    Tracking = "Macro Name : Tracking " + Err.Description
+End Function
+
+Public Function FillForm(ByVal strFormXML As String) As Variant
+    Dim FormsDocXML As Object
+    Set FormsDocXML = CreateObject("MSXML.DOMDocument")
+    
+    Dim FormsElementXML As Object
+    Dim lang As String
+    Dim lCorpID As Long, lProjID As Long
+    Dim j As Integer
+    Dim formStage As Integer
+    Dim toHideRow As Long
+    StrPassWord = "pcrossypf23"
+    Dim DelString As String, strSessionID As String
+    Dim strSortXSL As String, FormsDocXSL As Object
+    
+    On Error GoTo err_trap
+    
+    FormsDocXML.async = False
+    FormsDocXML.LoadXML strFormXML
+    Set FormsElementXML = FormsDocXML.DocumentElement
+    If FormsElementXML Is Nothing Then
+        Err.Raise -2001, "XML Report", "Invalid XML"
+    End If
+    
+    'Build the sort XSL
+        strSortXSL = "<?xml version=""1.0""?><xsl:stylesheet version=""1.0"" xmlns:xsl=""http://www.w3.org/1999/XSL/Transform"">" & _
+                    "<xsl:template match=""/""><DH>" & _
+                    "<xsl:for-each select=""//DH/*"" ><xsl:sort select=""@ACTID"" order=""ascending""  />" & _
+                    "<xsl:copy-of select="".""></xsl:copy-of></xsl:for-each>" & _
+                    "</DH></xsl:template></xsl:stylesheet>"
+    'Temporarily Realoding the Input XML
+    Dim TempDocXML As Object, TempElementXML As Object
+    Set TempDocXML = CreateObject("MSXML.DOMDocument")
+    TempDocXML.LoadXML strFormXML
+                    
+    'Load the xsl
+    Set FormsDocXSL = CreateObject("MSXML.DOMDocument")
+    FormsDocXSL.LoadXML (strSortXSL)
+    
+    'Transform the object
+    Dim strFormContent  As String
+    strFormContent = TempDocXML.transformNode(FormsDocXSL)
+    TempDocXML.LoadXML (strFormContent)
+    Set TempElementXML = TempDocXML.DocumentElement
+    
+    Application.DisplayAlerts = False
+    ActiveWorkbook.Unprotect StrPassWord
+    ActiveSheet.Unprotect StrPassWord
+    ActiveSheet.Select
+    ActiveWorkbook.Names("ORCHCONTEXTEMAILID").RefersToRange = FormsElementXML.getAttribute("ORCHCONTEXTEMAILID")
+    Selection.Locked = True
+    ActiveWorkbook.Names("DTDXMLPATH").RefersToRange = FormsElementXML.getAttribute("DTDXMLPATH")
+    removeflg = 0
+    
+    If Not IsNull(FormsElementXML.getAttribute("CorpID")) Then
+        lCorpID = FormsElementXML.getAttribute("CorpID")
+    End If
+    
+    Dim CacheDTDXML As Object
+    Set CacheDTDXML = CreateObject("MSXML.DOMDocument")
+    CacheDTDXML.async = False
+    'CacheDTDXML.Load (ActiveWorkbook.Names("DTDXMLPATH").RefersToRange)
+    CacheDTDXML.Load (ActiveWorkbook.Names("DTDXMLPATH").RefersToRange)
+    If (Worksheets(2).CacheDTDXML.Text = "") Then
+        Worksheets(2).CacheDTDXML.Text = CacheDTDXML.XML
+    End If
+    
+    If (ActiveWorkbook.Names("ServerPath").RefersToRange = "") Then
+        ActiveWorkbook.Names("ServerPath").RefersToRange = Replace(GetSetting("OrchServerPath"), "/English", "")
+        ActiveWorkbook.Names("ServerPath").RefersToRange = Replace(ActiveWorkbook.Names("ServerPath").RefersToRange, "OrchLogin.asp?", "English/GARS/GARSOnlineSub.asp")
+    End If
+    
+    Dim ChildFormElementXML As Object
+    Dim ChildFormNodeListXML As Object
+    Dim ChildFormNodeList
+    Dim sheetname As String
+    Dim i As Integer
+    Dim listindex As String
+    Dim arDynamicElem, lIndx
+    Dim status As Integer, Add1
+    status = FormsElementXML.getAttribute("FormStatus")
+    
+    Dim APCOUNT As Integer, SUBCOUNT As Integer, Version As Integer
+    
+    If Not IsNull(FormsElementXML.getAttribute("Version")) Then
+        Version = FormsElementXML.getAttribute("Version")
+    End If
+    If Not IsNull(FormsElementXML.getAttribute("ReportDate")) Then
+        'ActiveWorkbook.Names("Forms.ReportDate.").RefersToRange = Format((FormsElementXML.getAttribute("ReportDate")), "DD\-MMM\-YYYY")
+        Range("AE2") = PCStringToDate(FormsElementXML.getAttribute("ReportDate"))
+    End If
+    If Not IsNull(FormsElementXML.getAttribute("PRSD")) Then
+        Range("AE3") = PCStringToDate(FormsElementXML.getAttribute("PRSD"))
+    End If
+    
+    'If Not IsNull(FormsElementXML.getAttribute("ATGED")) Then
+        'Range("AE4") = PCStringToDate(FormsElementXML.getAttribute("ATGED"))
+    'End If
+    
+    'If Not IsNull(FormsElementXML.getAttribute("ATGSD")) Then
+        'Range("AE5") = PCStringToDate(FormsElementXML.getAttribute("ATGSD"))
+    'End If
+    
+    If Not IsNull(FormsElementXML.getAttribute("TGSD")) Then
+        Range("AE6") = PCStringToDate(FormsElementXML.getAttribute("TGSD"))
+    End If
+    
+    'Header
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("PT").Item(0)
+    
+    ActiveWorkbook.Names("Forms.C.PT").RefersToRange = ChildFormElementXML.Text
+        
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("C").Item(0)
+    If Not IsNull(FormsElementXML.getAttribute("DRTRANS")) Then
+        ActiveWorkbook.Names("DRMODE").RefersToRange = FormsElementXML.getAttribute("DRTRANS")
+        If (FormsElementXML.getAttribute("DRTRANS") > 0) Then
+            If (FormsElementXML.getAttribute("DRTRANS") = 1) Then
+                ActiveSheet.Shapes("XMLSubmit").Visible = False
+                ActiveSheet.Shapes("ExcelSubmit").Visible = True
+                If Not IsNull(FormsElementXML.getAttribute("RCYCLE")) Then 'Discrete
+                    If (FormsElementXML.getAttribute("RCYCLE")) = 5 Then
+                        ActiveSheet.Shapes("cmdSaveAs").Visible = True
+                    Else
+                        ActiveSheet.Shapes("cmdSaveAs").Visible = False
+                    End If
+                Else
+                    ActiveSheet.Shapes("cmdSaveAs").Visible = False
+                End If
+                ActiveSheet.Shapes("CreateXML").Visible = False
+                ActiveSheet.ExcelSubmit.Caption = "Submit" & Chr(10) & "(using Outlook)"
+            Else
+                ActiveSheet.Shapes("ExcelSubmit").Visible = False
+                ActiveSheet.Shapes("cmdSaveAs").Visible = False
+                ActiveSheet.Shapes("XMLSubmit").Visible = True
+                ActiveSheet.XMLSubmit.Caption = "Submit" & Chr(10) & "(using Outlook)"
+                If (FormsElementXML.getAttribute("DRTRANS") = 2) Then
+                    ActiveSheet.Shapes("CreateXML").Visible = True
+                    ActiveSheet.CreateXML.Caption = "Submit" & Chr(10) & "(using other mail clients)"
+                Else
+                    ActiveSheet.Shapes("CreateXML").Visible = False
+                    ActiveSheet.XMLSubmit.Caption = "Submit"
+                End If
+            End If
+        End If
+    End If
+    Range("D2") = "Daily Report - "
+    Range("C5") = "Daily Report " & Version & " for " & PCIntToStringMonths(FormsElementXML.getAttribute("ReportDate"))
+    If Not IsNull(FormsElementXML.getAttribute("RCYCLE")) Then
+        ActiveWorkbook.Names("RCYCLE").RefersToRange = FormsElementXML.getAttribute("RCYCLE")
+        If (FormsElementXML.getAttribute("RCYCLE") = 2) Then
+            Range("B56").Value = "Acquired week"
+            Range("E75,C86,C93,D105,D117,D132,D141,D155").Value = "Week"
+            'Range("B82,B88").Value = "Week Hours"
+            'Range("B83,B89").Value = "Week Km"
+            Range("D2") = "Weekly Report - "
+            Range("C5") = "Weekly Report " & Version & " for " & PCIntToStringMonths(FormsElementXML.getAttribute("ReportDate"))
+        End If
+        If (FormsElementXML.getAttribute("RCYCLE") = 2 Or FormsElementXML.getAttribute("RCYCLE") = 3 Or FormsElementXML.getAttribute("RCYCLE") = 5) Then  'discrete------
+            Range("B57:J57,F75:F77,D85:D90,D92:D103,E105:E115,E117:E130,E132:E139,E141:E153,E155:E158").Select
+            With Selection.Font
+                .ColorIndex = 15
+            End With
+            With Selection.Interior
+                .ColorIndex = 15
+                .Pattern = xlSolid
+                .PatternColorIndex = xlAutomatic
+            End With
+        End If
+        If (FormsElementXML.getAttribute("RCYCLE") = 3 Or FormsElementXML.getAttribute("RCYCLE") = 5) Then
+            If (FormsElementXML.getAttribute("RCYCLE") = 3) Then
+                Range("D2") = "Monthly Report - "
+                Range("C5") = "Monthly Report " & Version & " for " & PCIntToStringMonths(FormsElementXML.getAttribute("ReportDate"))
+            
+                Range("B56").Value = "Acquired month"
+                Range("E75,C86,C93,D105,D117,D132,D141,D155").Value = "Month"
+               ' Range("B82,B88").Value = "Month Hours"
+               ' Range("B83,B89").Value = "Month Km"
+            End If
+            Range("B58:J58,G75:G77,E85:F90,E92:F103,F105:F115,F117:F130,F132:F139,F141:F153,F155:F158").Select
+            With Selection.Font
+                .ColorIndex = 15
+            End With
+            With Selection.Interior
+                .ColorIndex = 15
+                .Pattern = xlSolid
+                .PatternColorIndex = xlAutomatic
+            End With
+            If (FormsElementXML.getAttribute("RCYCLE") = 5) Then
+                Range("B59:J61,H75:I77,H85:I90,H92:I103,G105:G115,G117:G130,G132:G139,G141:G153,G85:G90,G92:G103,G155:G158").Select
+                With Selection.Font
+                    .ColorIndex = 15
+                End With
+                With Selection.Interior
+                    .ColorIndex = 15
+                    .Pattern = xlSolid
+                    .PatternColorIndex = xlAutomatic
+                End With
+            End If
+        End If
+    End If
+    If Not IsNull(FormsElementXML.getAttribute("WRD")) Then
+        ActiveWorkbook.Names("WRD").RefersToRange = FormsElementXML.getAttribute("WRD")
+    End If
+    If Not IsNull(FormsElementXML.getAttribute("MRD")) Then
+        ActiveWorkbook.Names("MRD").RefersToRange = FormsElementXML.getAttribute("MRD")
+    End If
+    If Not IsNull(FormsElementXML.getAttribute("SRD")) Then
+        ActiveWorkbook.Names("SRD").RefersToRange = Format((FormsElementXML.getAttribute("SRD")), "DD")
+        Range("AE9").Value = PCStringToDate(FormsElementXML.getAttribute("SRD"))
+        
+    End If
+    
+    If Not IsNull(FormsElementXML.getAttribute("ONHOLDPERIOD")) Then
+         Range("AG1") = FormsElementXML.getAttribute("ONHOLDPERIOD")
+    Else
+        Range("AG1") = 0
+    End If
+    If Not IsNull(FormsElementXML.getAttribute("ONHOLDTOP")) Then
+         Range("AH1") = FormsElementXML.getAttribute("ONHOLDTOP")
+    Else
+        Range("AH1") = 0
+    End If
+    If Not IsNull(FormsElementXML.getAttribute("LatResDt")) Then
+         Range("AI1") = PCStringToDate(FormsElementXML.getAttribute("LatResDt"))
+    End If
+    If Not IsNull(FormsElementXML.getAttribute("LatOnholdDt")) Then
+         Range("AI2") = PCStringToDate(FormsElementXML.getAttribute("LatOnholdDt"))
+    End If
+    If Not IsNull(FormsElementXML.getAttribute("NXTRELDT")) And Not IsNull(FormsElementXML.getAttribute("ONHOLDPERIOD")) Then
+        'SHEETAL
+        If ((FormsElementXML.getAttribute("RCYCLE")) = 5) Then
+            Range("AF1") = 1
+        Else    'SHEETAL
+            Range("AF1") = DateDiff("d", PCStringToDate(FormsElementXML.getAttribute("ReportDate")), PCStringToDate(FormsElementXML.getAttribute("NXTRELDT")))
+        End If
+        'Range("AF1") = Range("AF1").Value - FormsElementXML.getAttribute("ONHOLDPERIOD")
+       
+    End If
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("C").Item(0)
+    If Not IsNull(ChildFormElementXML.getAttribute("APCOUNT")) Then
+        APCOUNT = ChildFormElementXML.getAttribute("APCOUNT")
+    End If
+    
+    If Not IsNull(ChildFormElementXML.getAttribute("SUBCOUNT")) Then
+        SUBCOUNT = ChildFormElementXML.getAttribute("SUBCOUNT")
+    End If
+    
+    'Range("E2") = "Daily Report - "
+    Range("F2") = Format(FormsElementXML.getAttribute("ReportDate"), "DD\-MMM\-YYYY")
+    If ((FormsElementXML.getAttribute("RCYCLE") = 1) And ((FormsElementXML.getAttribute("DRTRANS") = 2) Or (FormsElementXML.getAttribute("DRTRANS") = 3)) Or ((FormsElementXML.getAttribute("RCYCLE") = 5))) Then
+        Range("F2").Select
+        Selection.Locked = False
+    Else
+        Range("F2").Select
+        Selection.Locked = True
+    End If
+    Range("O5") = PCStringToDate(FormsElementXML.getAttribute("ReportDate"))
+    'Range("C5") = "Daily Report " & Version & " for " & Format(FormsElementXML.getAttribute("ReportDate"), "DD\-MMM\-YYYY")
+    Range("F5") = APCOUNT & " Approved Reports / " & SUBCOUNT & " Submitted Reports"
+        
+    'Header
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("PT").Item(0)
+    
+    ActiveWorkbook.Names("Forms.C.PT").RefersToRange = ChildFormElementXML.Text
+    
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("C").Item(0)
+    If Not IsNull(ChildFormElementXML.getAttribute("RT")) Then
+    ActiveWorkbook.Names("Forms.C.RT.").RefersToRange = ChildFormElementXML.getAttribute("RT")
+    End If
+    
+    If Not IsNull(ChildFormElementXML.getAttribute("CTN")) Then
+        ActiveWorkbook.Names("Forms.C.CTN.").RefersToRange = ChildFormElementXML.getAttribute("CTN")
+    End If
+    If Not IsNull(ChildFormElementXML.getAttribute("RID")) Then
+    ActiveWorkbook.Names("Forms.C.RID.").RefersToRange = ChildFormElementXML.getAttribute("RID")
+    End If
+    
+    If Not IsNull(ChildFormElementXML.getAttribute("PS")) Then
+        Range("AE7") = PCStringToDate(ChildFormElementXML.getAttribute("PS"))
+    End If
+        
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("CW").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+    'Hide that Crew column in  the report
+      '  If Not IsNull(ChildFormElementXML.getAttribute("CE")) Then
+      '      ActiveWorkbook.Names("Forms.C.CW.CE.").RefersToRange = ChildFormElementXML.getAttribute("CE")
+      '  End If
+    
+        If Not IsNull(ChildFormElementXML.getAttribute("CB")) Then
+            ActiveWorkbook.Names("Forms.C.CW.CB.").RefersToRange = ChildFormElementXML.getAttribute("CB")
+        End If
+    End If
+    'ActiveWorkbook.Names("Forms.CommonData.Vessel.VName.").RefersToRange.Locked
+    
+    'Originator(code deleted)
+   
+    'Country
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("CS").Item(0)
+    ActiveWorkbook.Names("Forms.C.CS.CN.").RefersToRange = ChildFormElementXML.getAttribute("CN")
+    'ActiveWorkbook.Names("Forms.C.CS.CD.").RefersToRange = ChildFormElementXML.getAttribute("CD")
+    
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("A").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        If Not IsNull(ChildFormElementXML.getAttribute("AN")) Then
+            ActiveWorkbook.Names("Forms.C.A.AN.").RefersToRange = ChildFormElementXML.getAttribute("AN")
+        End If
+        If Not IsNull(ChildFormElementXML.getAttribute("AD")) Then
+            ActiveWorkbook.Names("Forms.C.A.AD.").RefersToRange = ChildFormElementXML.getAttribute("AD")
+        End If
+    End If
+    'block
+    
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("B").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        If Not IsNull(ChildFormElementXML.getAttribute("BN")) Then
+            ActiveWorkbook.Names("Forms.C.B.BN.").RefersToRange = ChildFormElementXML.getAttribute("BN")
+        End If
+        If Not IsNull(ChildFormElementXML.getAttribute("BD")) Then
+            ActiveWorkbook.Names("Forms.C.B.BD.").RefersToRange = ChildFormElementXML.getAttribute("BD")
+        End If
+    End If
+    'CCompany
+    
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("CC").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        If Not IsNull(ChildFormElementXML.getAttribute("CM")) Then
+            ActiveWorkbook.Names("Forms.C.CC.CM.").RefersToRange = ChildFormElementXML.getAttribute("CM")
+        End If
+        If Not IsNull(ChildFormElementXML.getAttribute("CI")) Then
+            ActiveWorkbook.Names("Forms.C.CC.CI.").RefersToRange = ChildFormElementXML.getAttribute("CI")
+        End If
+    End If
+    
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("CR").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        If Not IsNull(ChildFormElementXML.getAttribute("CA")) Then
+            ActiveWorkbook.Names("Forms.C.CR.CA.").RefersToRange = ChildFormElementXML.getAttribute("CA")
+        End If
+        If Not IsNull(ChildFormElementXML.getAttribute("CP")) Then
+            ActiveWorkbook.Names("Forms.C.CR.CP.").RefersToRange = ChildFormElementXML.getAttribute("CP")
+        End If
+    End If
+    
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("C").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        Range("AE1") = PCStringToDate(ChildFormElementXML.getAttribute("PE"))
+    End If
+        
+    If status = 10 Then
+        Sheets("DailyReport").XMLSubmit.Visible = False
+        Sheets("DailyReport").ExcelSubmit.Visible = False
+        Sheets("DailyReport").CreateXML.Visible = False
+        Sheets("DailyReport").cmdSaveAs.Visible = False
+        Sheets("DailyReport").ExcelReject.Visible = False
+        Sheets("DailyReport").ExcelApprove.Visible = False
+    ElseIf status = 3 Then
+        Sheets("DailyReport").XMLSubmit.Visible = False
+        Sheets("DailyReport").ExcelSubmit.Visible = False
+        Sheets("DailyReport").CreateXML.Visible = False
+        Sheets("DailyReport").cmdSaveAs.Visible = False
+        Sheets("DailyReport").ExcelReject.Visible = True
+        Sheets("DailyReport").ExcelApprove.Visible = True
+    Else
+        Sheets("DailyReport").ExcelReject.Visible = False
+        Sheets("DailyReport").ExcelApprove.Visible = False
+    End If
+    
+    'Classification
+    Dim FormDOcXML As Object
+    Set FormDOcXML = ChildFormElementXML.SelectSingleNode("//AIRB")
+    If Not FormDOcXML Is Nothing Then
+    ActiveWorkbook.Names("Forms.C.AIRB.CLFN.").RefersToRange = FormDOcXML.getAttribute("CLFN")
+         If FormDOcXML.getAttribute("CLFN") = 1 Then
+            Range("Classification").Value = "Airborne Gravity_Gradiometry"
+         ElseIf FormDOcXML.getAttribute("CLFN") = 2 Then
+            Range("Classification").Value = "Aeromagnetic Survey"
+         ElseIf FormDOcXML.getAttribute("CLFN") = 3 Then
+            Range("Classification").Value = "Conventional Airborne Gravity and Magnetic"
+         End If
+    End If
+    'Hide the Operation Summary and Weather Condition section in report.
+    'Operation Summary and Weather Condition.
+   ' Set FormDOcXML = ChildFormElementXML.SelectSingleNode("//SUMRY")
+    'If Not FormDOcXML Is Nothing Then
+        'If status = 3 Then
+            'If Not IsNull(FormDOcXML.getAttribute("OPSU")) Then
+                'ActiveWorkbook.Names("Forms.C.SUMRY.OPSU.").RefersToRange = FormDOcXML.getAttribute("OPSU")
+           ' End If
+            'If Not IsNull(FormDOcXML.getAttribute("WCON")) Then
+                'ActiveWorkbook.Names("Forms.C.SUMRY.WCON.").RefersToRange = FormDOcXML.getAttribute("WCON")
+           ' End If
+        'End If
+    'End If
+    
+    
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("RC").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.SP.RC.CJ.").RefersToRange = ChildFormElementXML.getAttribute("CJ")
+       ' ActiveWorkbook.Names("Forms.MN.DR.SP.RC.SR.").RefersToRange = ChildFormElementXML.getAttribute("SR")
+       ' ActiveWorkbook.Names("Forms.MN.DR.SP.RC.RB.").RefersToRange = ChildFormElementXML.getAttribute("RB")
+       ' ActiveWorkbook.Names("Forms.MN.DR.SP.RC.DMK.").RefersToRange = ChildFormElementXML.getAttribute("DMK")
+    'End If
+    
+    'Reciever
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("RV").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+     '   ActiveWorkbook.Names("Forms.MN.DR.SP.RV.SF.").RefersToRange = ChildFormElementXML.getAttribute("SF")
+     '   ActiveWorkbook.Names("Forms.MN.DR.SP.RV.NL.").RefersToRange = ChildFormElementXML.getAttribute("NL")
+     '   ActiveWorkbook.Names("Forms.MN.DR.SP.RV.NG.").RefersToRange = ChildFormElementXML.getAttribute("NG")
+   ' End If
+
+    'Source
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("SO").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+    '    ActiveWorkbook.Names("Forms.MN.DR.SP.SO.SN.").RefersToRange = ChildFormElementXML.getAttribute("SN")
+     '   ActiveWorkbook.Names("Forms.MN.DR.SP.SO.NO.").RefersToRange = ChildFormElementXML.getAttribute("NO")
+    'End If
+    'Surveying
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("RV").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+     '   ActiveWorkbook.Names("Forms.MN.DR.SP.RV.SU.").RefersToRange = ChildFormElementXML.getAttribute("SU")
+   ' End If
+    'Fold
+   ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("FO").Item(0)
+   ' If Not ChildFormElementXML Is Nothing Then
+   '     ActiveWorkbook.Names("Forms.MN.DR.SP.FO.NM.").RefersToRange = ChildFormElementXML.getAttribute("NM")
+   ' End If
+    
+    'Below function locks and puts grey color to survey parameter section after fillin
+   ' Call LockSurveyParamSection
+    
+    'General Survey Parameters
+    'Projection - Datum
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("GSP").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.PD.").RefersToRange = ChildFormElementXML.getAttribute("PD")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.AK.").RefersToRange = ChildFormElementXML.getAttribute("AK")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.BL.").RefersToRange = ChildFormElementXML.getAttribute("BL")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.TD.").RefersToRange = ChildFormElementXML.getAttribute("TD")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.FN.").RefersToRange = ChildFormElementXML.getAttribute("FN")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.FS.").RefersToRange = ChildFormElementXML.getAttribute("FS")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.FD.").RefersToRange = ChildFormElementXML.getAttribute("FD")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.FM.").RefersToRange = ChildFormElementXML.getAttribute("FM")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.TLN.").RefersToRange = ChildFormElementXML.getAttribute("TLN")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.TLS.").RefersToRange = ChildFormElementXML.getAttribute("TLS")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.TLD.").RefersToRange = ChildFormElementXML.getAttribute("TLD")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.TLM.").RefersToRange = ChildFormElementXML.getAttribute("TLM")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.FE.").RefersToRange = ChildFormElementXML.getAttribute("FE")
+        ActiveWorkbook.Names("Forms.MN.DR.GSP.CM.").RefersToRange = ChildFormElementXML.getAttribute("CM")
+    End If
+      
+    'Infill Parameters
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("IP").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.IP.NI.").RefersToRange = ChildFormElementXML.getAttribute("NI")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.CM.").RefersToRange = ChildFormElementXML.getAttribute("CM")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.NA.").RefersToRange = ChildFormElementXML.getAttribute("NA")
+        'ActiveWorkbook.Names("Forms.MN.DR.IP.BL.").RefersToRange = ChildFormElementXML.getAttribute("BL")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.COX.").RefersToRange = ChildFormElementXML.getAttribute("COX")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.COY.").RefersToRange = ChildFormElementXML.getAttribute("COY")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.FLN.").RefersToRange = ChildFormElementXML.getAttribute("FLN")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.FLS.").RefersToRange = ChildFormElementXML.getAttribute("FLS")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.FLD.").RefersToRange = ChildFormElementXML.getAttribute("FLD")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.FLM.").RefersToRange = ChildFormElementXML.getAttribute("FLM")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.TLN.").RefersToRange = ChildFormElementXML.getAttribute("TLN")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.TLS.").RefersToRange = ChildFormElementXML.getAttribute("TLS")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.TLD.").RefersToRange = ChildFormElementXML.getAttribute("TLD")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.TLM.").RefersToRange = ChildFormElementXML.getAttribute("TLM")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.AR.").RefersToRange = ChildFormElementXML.getAttribute("AR")
+        ActiveWorkbook.Names("Forms.MN.DR.IP.TD.").RefersToRange = ChildFormElementXML.getAttribute("TD")
+    End If
+        
+    'Aircraft Details
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("AD").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.AD.TY.").RefersToRange = ChildFormElementXML.getAttribute("TY")
+        ActiveWorkbook.Names("Forms.MN.DR.AD.RN.").RefersToRange = ChildFormElementXML.getAttribute("RN")
+        ActiveWorkbook.Names("Forms.MN.DR.AD.YR.").RefersToRange = ChildFormElementXML.getAttribute("YR")
+    End If
+        
+    
+    'Equipment Parameters
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("EP").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.EP.TY.").RefersToRange = ChildFormElementXML.getAttribute("TY")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.RA.").RefersToRange = ChildFormElementXML.getAttribute("RA")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.RR.").RefersToRange = ChildFormElementXML.getAttribute("RR")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.SN.").RefersToRange = ChildFormElementXML.getAttribute("SN")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.SR.").RefersToRange = ChildFormElementXML.getAttribute("SR")
+        'ActiveWorkbook.Names("Forms.MN.DR.EP.SD.").RefersToRange = ChildFormElementXML.getAttribute("SD")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.LTY.").RefersToRange = ChildFormElementXML.getAttribute("LTY")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.LRR.").RefersToRange = ChildFormElementXML.getAttribute("LRR")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.LTI.").RefersToRange = ChildFormElementXML.getAttribute("LTI")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.AR.").RefersToRange = ChildFormElementXML.getAttribute("AR")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.EP.ATY.").RefersToRange = ChildFormElementXML.getAttribute("ATY")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.AMR.").RefersToRange = ChildFormElementXML.getAttribute("AMR")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.ARS.").RefersToRange = ChildFormElementXML.getAttribute("ARS")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.ANE.").RefersToRange = ChildFormElementXML.getAttribute("ANE")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.AHE.").RefersToRange = ChildFormElementXML.getAttribute("AHE")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.ASY.").RefersToRange = ChildFormElementXML.getAttribute("ASY")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.ANE.").RefersToRange = ChildFormElementXML.getAttribute("ANE")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.MTY.").RefersToRange = ChildFormElementXML.getAttribute("MTY")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.MRS.").RefersToRange = ChildFormElementXML.getAttribute("MRS")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.MSR.").RefersToRange = ChildFormElementXML.getAttribute("MSR")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.EP.PTY.").RefersToRange = ChildFormElementXML.getAttribute("PTY")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.PRS.").RefersToRange = ChildFormElementXML.getAttribute("PRS")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.PCN.").RefersToRange = ChildFormElementXML.getAttribute("PCN")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.PSR.").RefersToRange = ChildFormElementXML.getAttribute("PSR")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.RATY.").RefersToRange = ChildFormElementXML.getAttribute("RATY")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.RAR.").RefersToRange = ChildFormElementXML.getAttribute("RAR")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.RARS.").RefersToRange = ChildFormElementXML.getAttribute("RARS")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.RASR.").RefersToRange = ChildFormElementXML.getAttribute("RASR")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.BATY.").RefersToRange = ChildFormElementXML.getAttribute("BATY")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.BAR.").RefersToRange = ChildFormElementXML.getAttribute("BAR")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.BARS.").RefersToRange = ChildFormElementXML.getAttribute("BARS")
+        ActiveWorkbook.Names("Forms.MN.DR.EP.BASR.").RefersToRange = ChildFormElementXML.getAttribute("BASR")
+    End If
+    
+    Call LockAirborneSection
+    
+    'No. Flights
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("TR").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.PP.TR.AC.").RefersToRange = ChildFormElementXML.getAttribute("AC")
+        Range("AF" & ActiveWorkbook.Names("Forms.MN.DR.PP.TR.AW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("AW") - ChildFormElementXML.getAttribute("AC")
+        Range("AF" & ActiveWorkbook.Names("Forms.MN.DR.PP.TR.AM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("AM") - ChildFormElementXML.getAttribute("AC")
+        Range("AF" & ActiveWorkbook.Names("Forms.MN.DR.PP.TR.ASR.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ASR") - ChildFormElementXML.getAttribute("AC")
+    End If
+    
+    
+       'No.Lines
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("TZR").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.TZR.TPA.").RefersToRange = ChildFormElementXML.getAttribute("TPA")
+        ActiveWorkbook.Names("Forms.TZR.TFK.").RefersToRange = ChildFormElementXML.getAttribute("TFK")
+        Range("AH" & ActiveWorkbook.Names("Forms.TZR.NLW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("NLW") - ChildFormElementXML.getAttribute("TPA")
+        Range("AH" & ActiveWorkbook.Names("Forms.TZR.NLM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("NLM") - ChildFormElementXML.getAttribute("TPA")
+        Range("AH" & ActiveWorkbook.Names("Forms.TZR.NLS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("NLS") - ChildFormElementXML.getAttribute("TPA")
+        Range("AI" & ActiveWorkbook.Names("Forms.TZR.TFW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TFW") - ChildFormElementXML.getAttribute("TFK")
+        Range("AI" & ActiveWorkbook.Names("Forms.TZR.TFM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TFM") - ChildFormElementXML.getAttribute("TFK")
+        Range("AI" & ActiveWorkbook.Names("Forms.TZR.TFS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TFS") - ChildFormElementXML.getAttribute("TFK")
+    End If
+      
+    'Km Line
+     Set ChildFormElementXML = FormsElementXML.getElementsByTagName("PO").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.PP.PO.TDT.").RefersToRange = ChildFormElementXML.getAttribute("TDT")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.PP.PO.TDW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TDW") - ChildFormElementXML.getAttribute("TDT")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.PP.PO.TDM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TDM") - ChildFormElementXML.getAttribute("TDT")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.PP.PO.TDS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TDS") - ChildFormElementXML.getAttribute("TDT")
+       ' ActiveWorkbook.Names("Forms.MN.DR.PP.KL.KT.").RefersToRange = ChildFormElementXML.getAttribute("KT")
+    End If
+    
+    'Total Pre accepted KM
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("KM").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.PP.KM.AQ.").RefersToRange = ChildFormElementXML.getAttribute("AQ")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.PP.KM.AK.").RefersToRange.Row) = ChildFormElementXML.getAttribute("AK") - ChildFormElementXML.getAttribute("AQ")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.PP.KM.AB.").RefersToRange.Row) = ChildFormElementXML.getAttribute("AB") - ChildFormElementXML.getAttribute("AQ")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.PP.KM.AV.").RefersToRange.Row) = ChildFormElementXML.getAttribute("AV") - ChildFormElementXML.getAttribute("AQ")
+    End If
+    'Comments
+   Set ChildFormElementXML = FormsElementXML.getElementsByTagName("ADT").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.ADT.LNT.").RefersToRange = ChildFormElementXML.getAttribute("LNT")
+        ActiveWorkbook.Names("Forms.MN.DR.ADT.LNW.").RefersToRange = ChildFormElementXML.getAttribute("LNW")
+        ActiveWorkbook.Names("Forms.MN.DR.ADT.LNM.").RefersToRange = ChildFormElementXML.getAttribute("LNM")
+        ActiveWorkbook.Names("Forms.MN.DR.ADT.LNS.").RefersToRange = ChildFormElementXML.getAttribute("LNS")
+     'Hidden the column in comment section
+        'ActiveWorkbook.Names("Forms.MN.DR.ADT.LNP.").RefersToRange = ChildFormElementXML.getAttribute("LNP")
+        ActiveWorkbook.Names("Forms.MN.DR.ADT.LNA.").RefersToRange = ChildFormElementXML.getAttribute("LNA")
+    End If
+    
+
+    
+    'Drilling
+    'VPs
+   ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("DS").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+      '  ActiveWorkbook.Names("Forms.MN.DR.DN.DS.DT.").RefersToRange = ChildFormElementXML.getAttribute("DT")
+      '  Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.DN.DS.DC.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DC") - ChildFormElementXML.getAttribute("DT")
+       ' Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.DN.DS.DM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DM") - ChildFormElementXML.getAttribute("DT")
+       ' Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.DN.DS.DU.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DU") - ChildFormElementXML.getAttribute("DT")
+       ' ActiveWorkbook.Names("Forms.MN.DR.DN.DS.DO.").RefersToRange = ChildFormElementXML.getAttribute("DO")
+   ' End If
+    'TOTAL m
+    ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("LF").Item(0)
+   ' If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.DN.LF.LG.").RefersToRange = ChildFormElementXML.getAttribute("LG")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.DN.LF.LW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("LW") - ChildFormElementXML.getAttribute("LG")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.DN.LF.LH.").RefersToRange.Row) = ChildFormElementXML.getAttribute("LH") - ChildFormElementXML.getAttribute("LG")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.DN.LF.LU.").RefersToRange.Row) = ChildFormElementXML.getAttribute("LU") - ChildFormElementXML.getAttribute("LG")
+       ' ActiveWorkbook.Names("Forms.MN.DR.DN.LF.TT.").RefersToRange = ChildFormElementXML.getAttribute("TT")
+    'End If
+     'LINE km
+    ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("LJ").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.DN.LJ.LQ.").RefersToRange = ChildFormElementXML.getAttribute("LQ")
+       ' Range("BA" & ActiveWorkbook.Names("Forms.MN.DR.DN.LJ.LX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("LX") - ChildFormElementXML.getAttribute("LQ")
+       ' Range("BA" & ActiveWorkbook.Names("Forms.MN.DR.DN.LJ.LZ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("LZ") - ChildFormElementXML.getAttribute("LQ")
+       ' Range("BA" & ActiveWorkbook.Names("Forms.MN.DR.DN.LJ.SJ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("SJ") - ChildFormElementXML.getAttribute("LQ")
+      ' ActiveWorkbook.Names("Forms.MN.DR.DN.LJ.TL.").RefersToRange = ChildFormElementXML.getAttribute("TL")
+    'End If
+
+    'Survey SrcLines
+    'VPs
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("SM").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.SK.SM.SQ.").RefersToRange = ChildFormElementXML.getAttribute("SQ")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.SK.SM.SX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("SX") - ChildFormElementXML.getAttribute("SQ")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.SK.SM.SZ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("SZ") - ChildFormElementXML.getAttribute("SQ")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.SK.SM.U.").RefersToRange.Row) = ChildFormElementXML.getAttribute("U") - ChildFormElementXML.getAttribute("SQ")
+        'ActiveWorkbook.Names("Forms.MN.DR.SK.SM.UT.").RefersToRange = ChildFormElementXML.getAttribute("UT")
+    'End If
+     'LINE km
+     'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("L").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.SK.L.TU.").RefersToRange = ChildFormElementXML.getAttribute("TU")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.SK.L.TW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TW") - ChildFormElementXML.getAttribute("TU")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.SK.L.TX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TX") - ChildFormElementXML.getAttribute("TU")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.SK.L.TY.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TY") - ChildFormElementXML.getAttribute("TU")
+        'ActiveWorkbook.Names("Forms.MN.DR.SK.L.TZ.").RefersToRange = ChildFormElementXML.getAttribute("TZ")
+    'End If
+     
+    'Survey RcvLines
+    'RPs
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("RG").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+         'ActiveWorkbook.Names("Forms.MN.DR.S.RG.RH.").RefersToRange = ChildFormElementXML.getAttribute("RH")
+         'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.S.RG.RJ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RJ") - ChildFormElementXML.getAttribute("RH")
+         'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.S.RG.RK.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RK") - ChildFormElementXML.getAttribute("RH")
+         'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.S.RG.RO.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RO") - ChildFormElementXML.getAttribute("RH")
+         'ActiveWorkbook.Names("Forms.MN.DR.S.RG.RW.").RefersToRange = ChildFormElementXML.getAttribute("RW")
+   'End If
+    'Survey RcvLines
+    'Line km
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("IE").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.S.IE.IT.").RefersToRange = ChildFormElementXML.getAttribute("IT")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.S.IE.IA.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IA") - ChildFormElementXML.getAttribute("IT")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.S.IE.IM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IM") - ChildFormElementXML.getAttribute("IT")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.S.IE.ASU.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ASU") - ChildFormElementXML.getAttribute("IT")
+        'ActiveWorkbook.Names("Forms.MN.DR.S.IE.IO.").RefersToRange = ChildFormElementXML.getAttribute("IO")
+   'End If
+    
+     'UPHoles
+    'Drilled
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("UR").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.UA.UR.UO.").RefersToRange = ChildFormElementXML.getAttribute("UO")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.UA.UR.UW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UW") - ChildFormElementXML.getAttribute("UO")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.UA.UR.UM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UM") - ChildFormElementXML.getAttribute("UO")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.UA.UR.US.").RefersToRange.Row) = ChildFormElementXML.getAttribute("US") - ChildFormElementXML.getAttribute("UO")
+    'End If
+        
+     'LOGGED m
+     'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("UG").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.UA.UG.UY.").RefersToRange = ChildFormElementXML.getAttribute("UY")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.UA.UG.UC.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UC") - ChildFormElementXML.getAttribute("UY")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.UA.UG.UN.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UN") - ChildFormElementXML.getAttribute("UY")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.UA.UG.UU.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UU") - ChildFormElementXML.getAttribute("UY")
+    'End If
+    'Refraction
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("E").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+     '  ActiveWorkbook.Names("Forms.MN.DR.E.ET.").RefersToRange = ChildFormElementXML.getAttribute("ET")
+      '  Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.E.EA.").RefersToRange.Row) = ChildFormElementXML.getAttribute("EA") - ChildFormElementXML.getAttribute("ET")
+      '  Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.E.EC.").RefersToRange.Row) = ChildFormElementXML.getAttribute("EC") - ChildFormElementXML.getAttribute("ET")
+       ' Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.E.ES.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ES") - ChildFormElementXML.getAttribute("ET")
+    'End If
+    
+    'Geophones
+   ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("GO").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.GO.GA.").RefersToRange = ChildFormElementXML.getAttribute("GA")
+       ' ActiveWorkbook.Names("Forms.MN.DR.GO.GR.").RefersToRange = ChildFormElementXML.getAttribute("GR")
+       ' ActiveWorkbook.Names("Forms.MN.DR.GO.GC.").RefersToRange = ChildFormElementXML.getAttribute("GC")
+    'End If
+    
+    'Line Clearance
+    'Grp1
+   ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("IG").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.IN.IG.IH.").RefersToRange = ChildFormElementXML.getAttribute("IH")
+        'ActiveWorkbook.Names("Forms.MN.DR.IN.IG.IK.").RefersToRange = ChildFormElementXML.getAttribute("IK")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.IN.IG.IC.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IC") - ChildFormElementXML.getAttribute("IH")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.IN.IG.IB.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IB") - ChildFormElementXML.getAttribute("IK")
+   ' End If
+    
+    'Grp2
+   ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("ID").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.IN.ID.IF.").RefersToRange = ChildFormElementXML.getAttribute("IF")
+       ' ActiveWorkbook.Names("Forms.MN.DR.IN.ID.IJ.").RefersToRange = ChildFormElementXML.getAttribute("IJ")
+       ' Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.IN.ID.IP.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IP") - ChildFormElementXML.getAttribute("IF")
+       ' Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.IN.ID.IQ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IQ") - ChildFormElementXML.getAttribute("IJ")
+    'End If
+    
+    'Grp3
+   ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("IR").Item(0)
+   ' If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.IN.IR.IU.").RefersToRange = ChildFormElementXML.getAttribute("IU")
+        'ActiveWorkbook.Names("Forms.MN.DR.IN.IR.IW.").RefersToRange = ChildFormElementXML.getAttribute("IW")
+        'Range("BA" & ActiveWorkbook.Names("Forms.MN.DR.IN.IR.IX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IX") - ChildFormElementXML.getAttribute("IU")
+       ' Range("BA" & ActiveWorkbook.Names("Forms.MN.DR.IN.IR.IY.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IY") - ChildFormElementXML.getAttribute("IW")
+    'End If
+    
+    'Grp4
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("IZ").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.IN.IZ.I.").RefersToRange = ChildFormElementXML.getAttribute("I")
+        'ActiveWorkbook.Names("Forms.MN.DR.IN.IZ.M.").RefersToRange = ChildFormElementXML.getAttribute("M")
+       ' Range("BB" & ActiveWorkbook.Names("Forms.MN.DR.IN.IZ.MX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("MX") - ChildFormElementXML.getAttribute("I")
+       ' Range("BB" & ActiveWorkbook.Names("Forms.MN.DR.IN.IZ.MZ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("MZ") - ChildFormElementXML.getAttribute("M")
+    'End If
+    
+    'Grp5
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("GB").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.IN.GB.H.").RefersToRange = ChildFormElementXML.getAttribute("H")
+        'ActiveWorkbook.Names("Forms.MN.DR.IN.GB.HK.").RefersToRange = ChildFormElementXML.getAttribute("HK")
+        'Range("BC" & ActiveWorkbook.Names("Forms.MN.DR.IN.GB.HA.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HA") - ChildFormElementXML.getAttribute("H")
+        'Range("BC" & ActiveWorkbook.Names("Forms.MN.DR.IN.GB.HC.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HC") - ChildFormElementXML.getAttribute("HK")
+   ' End If
+    
+    'Grp6
+   ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("HG").Item(0)
+   ' If Not ChildFormElementXML Is Nothing Then
+      ' ActiveWorkbook.Names("Forms.MN.DR.IN.HG.HO.").RefersToRange = ChildFormElementXML.getAttribute("HO")
+       ' ActiveWorkbook.Names("Forms.MN.DR.IN.HG.HM.").RefersToRange = ChildFormElementXML.getAttribute("HM")
+       ' Range("BD" & ActiveWorkbook.Names("Forms.MN.DR.IN.HG.HH.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HH") - ChildFormElementXML.getAttribute("HO")
+        'Range("BD" & ActiveWorkbook.Names("Forms.MN.DR.IN.HG.HL.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HL") - ChildFormElementXML.getAttribute("HM")
+    'End If
+    
+    'Mine Clearance
+    'Grp1
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("NR").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.N.NR.NH.").RefersToRange = ChildFormElementXML.getAttribute("NH")
+        'ActiveWorkbook.Names("Forms.MN.DR.N.NR.NK.").RefersToRange = ChildFormElementXML.getAttribute("NK")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.N.NR.NU.").RefersToRange.Row) = ChildFormElementXML.getAttribute("NU") - ChildFormElementXML.getAttribute("NH")
+        'Range("AY" & ActiveWorkbook.Names("Forms.MN.DR.N.NR.NI.").RefersToRange.Row) = ChildFormElementXML.getAttribute("NI") - ChildFormElementXML.getAttribute("NK")
+    'End If
+    
+    'Grp2
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("ND").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.N.ND.NF.").RefersToRange = ChildFormElementXML.getAttribute("NF")
+       ' ActiveWorkbook.Names("Forms.MN.DR.N.ND.NJ.").RefersToRange = ChildFormElementXML.getAttribute("NJ")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.N.ND.NN.").RefersToRange.Row) = ChildFormElementXML.getAttribute("NN") - ChildFormElementXML.getAttribute("NF")
+        'Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.N.ND.NP.").RefersToRange.Row) = ChildFormElementXML.getAttribute("NP") - ChildFormElementXML.getAttribute("NJ")
+   ' End If
+    
+    'Grp3
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("NQ").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.N.NQ.NT.").RefersToRange = ChildFormElementXML.getAttribute("NT")
+       ' ActiveWorkbook.Names("Forms.MN.DR.N.NQ.NW.").RefersToRange = ChildFormElementXML.getAttribute("NW")
+        'Range("BA" & ActiveWorkbook.Names("Forms.MN.DR.N.NQ.NX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("NX") - ChildFormElementXML.getAttribute("NT")
+        'Range("BA" & ActiveWorkbook.Names("Forms.MN.DR.N.NQ.NY.").RefersToRange.Row) = ChildFormElementXML.getAttribute("NY") - ChildFormElementXML.getAttribute("NW")
+    'End If
+    
+    'Grp4
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("NZ").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.N.NZ.HS.").RefersToRange = ChildFormElementXML.getAttribute("HS")
+        'ActiveWorkbook.Names("Forms.MN.DR.N.NZ.HB.").RefersToRange = ChildFormElementXML.getAttribute("HB")
+        'Range("BB" & ActiveWorkbook.Names("Forms.MN.DR.N.NZ.HD.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HD") - ChildFormElementXML.getAttribute("HS")
+        'Range("BB" & ActiveWorkbook.Names("Forms.MN.DR.N.NZ.HE.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HE") - ChildFormElementXML.getAttribute("HB")
+    'End If
+    
+    'Grp5
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("HF").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.N.HF.HJ.").RefersToRange = ChildFormElementXML.getAttribute("HJ")
+        'ActiveWorkbook.Names("Forms.MN.DR.N.HF.HP.").RefersToRange = ChildFormElementXML.getAttribute("HP")
+        'Range("BC" & ActiveWorkbook.Names("Forms.MN.DR.N.HF.HQ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HQ") - ChildFormElementXML.getAttribute("HJ")
+        'Range("BC" & ActiveWorkbook.Names("Forms.MN.DR.N.HF.BC.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BC") - ChildFormElementXML.getAttribute("HP")
+    'End If
+    
+    'Grp6
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("BE").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.N.BE.HV.").RefersToRange = ChildFormElementXML.getAttribute("HV")
+        'ActiveWorkbook.Names("Forms.MN.DR.N.BE.HW.").RefersToRange = ChildFormElementXML.getAttribute("HW")
+       'Range("BD" & ActiveWorkbook.Names("Forms.MN.DR.N.BE.HX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HX") - ChildFormElementXML.getAttribute("HV")
+        'Range("BD" & ActiveWorkbook.Names("Forms.MN.DR.N.BE.HY.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HY") - ChildFormElementXML.getAttribute("HW")
+    'End If
+    
+    'For RepsolFolder Domain  --------------------------------
+    Dim DomainFormNodeListXML As Object
+    Dim DomainFormElementXML As Object
+    Dim DomainChildFormNodeList, l As Integer, iDomainCellRowStart As Integer, iDomainCellRowEnd As Integer
+    Set DomainFormNodeListXML = FormsElementXML.getElementsByTagName("RspDomain").Item(0)
+    iDomainCellRowStart = 18
+    ActiveWorkbook.Names("DocDomainStartCell").RefersToRange = iDomainCellRowStart
+    If Not DomainFormNodeListXML Is Nothing Then
+        Set DomainChildFormNodeList = DomainFormNodeListXML.getElementsByTagName("D")
+            For l = 0 To DomainChildFormNodeList.Length - 1
+                Set DomainFormElementXML = DomainChildFormNodeList.Item(l)
+                Range("CA" & iDomainCellRowStart).Value = DomainFormElementXML.getAttribute("TITLE")
+                
+                Range("CB" & iDomainCellRowStart).Value = DomainFormElementXML.getAttribute("NODEID")
+                iDomainCellRowStart = iDomainCellRowStart + 1
+            Next l
+    ActiveWorkbook.Names("DocDomainEndCell").RefersToRange = iDomainCellRowStart - 1
+    End If
+    
+    'Additionals
+    Set ChildFormNodeListXML = FormsElementXML.getElementsByTagName("DH").Item(0)
+
+    If Not ChildFormNodeListXML Is Nothing Then
+       Set ChildFormNodeList = TempElementXML.getElementsByTagName("DJ")
+            arDynamicElem = Split(ActiveWorkbook.Names("Forms.Marine3D.Summary.Additional").RefersToRange, ",")
+            For i = 0 To ChildFormNodeList.Length - 1
+                Set ChildFormElementXML = ChildFormNodeList.Item(i)
+                If i >= UBound(arDynamicElem) Then
+                    OperationSummaryAdding ActiveSheet.Name, "AdditionalMaxRow", "AdditionalMinRow", "AdditionalNextIndexCount", "AdditionalRange", "AdditionalSubRanges", "AdditionalNames", "AdditionalRefersTo", "UpdatedSheetName", "AdditionalChangeTrackerAddIndx", "Forms.Marine3D.Summary.Additional", "AdditionalIndex"
+                    lIndx = ActiveWorkbook.Names("AdditionalNextIndexCount").RefersToRange - 1
+                
+                    ActiveWorkbook.Names("CommentsMaxRow").RefersToRange = ActiveWorkbook.Names("CommentsMaxRow").RefersToRange + 1
+                    ActiveWorkbook.Names("CommentsMinRow").RefersToRange = ActiveWorkbook.Names("CommentsMinRow").RefersToRange + 1
+        
+                    ActiveWorkbook.Names("AddProjMaxRow").RefersToRange = ActiveWorkbook.Names("AddProjMaxRow").RefersToRange + 1
+                    ActiveWorkbook.Names("AddProjMinRow").RefersToRange = ActiveWorkbook.Names("AddProjMinRow").RefersToRange + 1
+                    '---1
+                    ActiveWorkbook.Names("DocsMaxRowName").RefersToRange = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange + 1
+                    ActiveWorkbook.Names("DocsMinRow").RefersToRange = ActiveWorkbook.Names("DocsMinRow").RefersToRange + 1
+               Else
+                    lIndx = arDynamicElem(i)
+                End If
+        
+                ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.DQ.").RefersToRange = ChildFormElementXML.getAttribute("DQ")
+                ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.UNT.").RefersToRange = ChildFormElementXML.getAttribute("UNT")
+                ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.DX.").RefersToRange = ChildFormElementXML.getAttribute("DX")
+                ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.DDOMAINID.").RefersToRange = ChildFormElementXML.getAttribute("DDOMAINID")
+                ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.UDOMAINID.").RefersToRange = ChildFormElementXML.getAttribute("UDOMAINID")
+               
+                Range("P" & ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.DW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DW") - ChildFormElementXML.getAttribute("DX")
+                Dim strName
+                strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.DW."
+                ActiveWorkbook.Names(strName).RefersToRange.Select
+                Selection.Formula = "=E" & ActiveWorkbook.Names(strName).RefersToRange.Row & "+" & "P" & ActiveWorkbook.Names(strName).RefersToRange.Row
+                Selection.Locked = True
+                
+                strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.DQ."
+                ActiveWorkbook.Names(strName).RefersToRange.Select
+                Selection.Locked = True
+                
+                strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.UNT."
+                ActiveWorkbook.Names(strName).RefersToRange.Select
+                Selection.Locked = True
+                
+                Range("N" & ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.DZ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DZ") - ChildFormElementXML.getAttribute("DX")
+                strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.DZ."
+                ActiveWorkbook.Names(strName).RefersToRange.Select
+                Selection.Formula = "=E" & ActiveWorkbook.Names(strName).RefersToRange.Row & "+" & "N" & ActiveWorkbook.Names(strName).RefersToRange.Row
+                Selection.Locked = True
+                
+                Range("O" & ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.UB.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UB") - ChildFormElementXML.getAttribute("DX")
+                strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.UB."
+                ActiveWorkbook.Names(strName).RefersToRange.Select
+                Selection.Formula = "=E" & ActiveWorkbook.Names(strName).RefersToRange.Row & "+" & "O" & ActiveWorkbook.Names(strName).RefersToRange.Row
+                Selection.Locked = True
+                
+                strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.DAV."
+                ActiveWorkbook.Names(strName).RefersToRange.Select
+                
+                Add1 = "H" & ActiveWorkbook.Names(strName).RefersToRange.Row
+                Selection.Formula = "=IF(AE3=""""," & Add1 & ",IF(AE2-AE3+AF1-AG1=0,0," & Add1 & "/(AE2-AE3+AF1-AG1)))"
+                Selection.Locked = True
+              
+                ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.DHID.").RefersToRange = ChildFormElementXML.getAttribute("DHID")
+                DelString = "Forms.MN.DR.DH\" & lIndx & "\DJ.DHID."
+            Next
+            If ChildFormNodeList.Length = 0 Then
+                Set ChildFormNodeListXML = FormsElementXML.getElementsByTagName("ACTIVITIES").Item(0)
+                Set ChildFormNodeList = ChildFormNodeListXML.getElementsByTagName("ACTIVITY")
+                arDynamicElem = Split(ActiveWorkbook.Names("Forms.Marine3D.Summary.Additional").RefersToRange, ",")
+                
+                For i = 0 To ChildFormNodeList.Length - 1
+                    Set ChildFormElementXML = ChildFormNodeList.Item(i)
+                    If i >= UBound(arDynamicElem) Then
+                        OperationSummaryAdding ActiveSheet.Name, "AdditionalMaxRow", "AdditionalMinRow", "AdditionalNextIndexCount", "AdditionalRange", "AdditionalSubRanges", "AdditionalNames", "AdditionalRefersTo", "UpdatedSheetName", "AdditionalChangeTrackerAddIndx", "Forms.Marine3D.Summary.Additional", "AdditionalIndex"
+                        lIndx = ActiveWorkbook.Names("AdditionalNextIndexCount").RefersToRange - 1
+                    
+                        ActiveWorkbook.Names("CommentsMaxRow").RefersToRange = ActiveWorkbook.Names("CommentsMaxRow").RefersToRange + 1
+                        ActiveWorkbook.Names("CommentsMinRow").RefersToRange = ActiveWorkbook.Names("CommentsMinRow").RefersToRange + 1
+            
+                        ActiveWorkbook.Names("AddProjMaxRow").RefersToRange = ActiveWorkbook.Names("AddProjMaxRow").RefersToRange + 1
+                        ActiveWorkbook.Names("AddProjMinRow").RefersToRange = ActiveWorkbook.Names("AddProjMinRow").RefersToRange + 1
+                    '----2
+                        ActiveWorkbook.Names("DocsMaxRowName").RefersToRange = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange + 1
+                        ActiveWorkbook.Names("DocsMinRow").RefersToRange = ActiveWorkbook.Names("DocsMinRow").RefersToRange + 1
+                   Else
+                        lIndx = arDynamicElem(i)
+                    End If
+            
+                    ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.DQ.").RefersToRange = ChildFormElementXML.getAttribute("ACTIVEDN")
+                    ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.UNT.").RefersToRange = ChildFormElementXML.getAttribute("UNITDN")
+                    ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.DDOMAINID.").RefersToRange = ChildFormElementXML.getAttribute("ACTIVEDID")
+                    ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.UDOMAINID.").RefersToRange = ChildFormElementXML.getAttribute("UNITDID")
+                   
+                    strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.DW."
+                    ActiveWorkbook.Names(strName).RefersToRange.Select
+                    Selection.Formula = "=E" & ActiveWorkbook.Names(strName).RefersToRange.Row & "+" & "P" & ActiveWorkbook.Names(strName).RefersToRange.Row
+                    Selection.Locked = True
+                    
+                    strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.DQ."
+                    ActiveWorkbook.Names(strName).RefersToRange.Select
+                    Selection.Locked = True
+                    
+                    strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.UNT."
+                    ActiveWorkbook.Names(strName).RefersToRange.Select
+                    Selection.Locked = True
+                    
+                    Range("N" & ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.DZ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DZ") - ChildFormElementXML.getAttribute("DX")
+                    strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.DZ."
+                    ActiveWorkbook.Names(strName).RefersToRange.Select
+                    Selection.Formula = "=E" & ActiveWorkbook.Names(strName).RefersToRange.Row & "+" & "N" & ActiveWorkbook.Names(strName).RefersToRange.Row
+                    Selection.Locked = True
+                    
+                    Range("O" & ActiveWorkbook.Names("Forms.MN.DR.DH\" & lIndx & "\DJ.UB.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UB") - ChildFormElementXML.getAttribute("DX")
+                    strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.UB."
+                    ActiveWorkbook.Names(strName).RefersToRange.Select
+                    Selection.Formula = "=E" & ActiveWorkbook.Names(strName).RefersToRange.Row & "+" & "O" & ActiveWorkbook.Names(strName).RefersToRange.Row
+                    Selection.Locked = True
+                    
+                    strName = "Forms.MN.DR.DH\" & lIndx & "\DJ.DAV."
+                    ActiveWorkbook.Names(strName).RefersToRange.Select
+                    
+                    Add1 = "H" & ActiveWorkbook.Names(strName).RefersToRange.Row
+                                
+                    Selection.Formula = "=IF(AE3=""""," & Add1 & ",IF(AE2-AE3+AF1-AG1=0,0," & Add1 & "/(AE2-AE3+AF1-AG1)))"
+                    Selection.Locked = True
+               Next
+            End If
+        End If
+        
+        'ProjTSchedule
+        Set ChildFormElementXML = FormsElementXML.getElementsByTagName("EE").Item(0)
+        If Not ChildFormElementXML Is Nothing Then
+           If Not ChildFormElementXML.getAttribute("EY") And (Not IsEmpty(ChildFormElementXML.getAttribute("EY")) Or Not IsNull(ChildFormElementXML.getAttribute("EY"))) Then
+               ActiveWorkbook.Names("Forms.MN.DR.OJ.EE.EY.").RefersToRange = ChildFormElementXML.getAttribute("EY")
+           End If
+            ActiveWorkbook.Names("Forms.MN.DR.OJ.EE.EL.").RefersToRange = ChildFormElementXML.getAttribute("EL")
+        
+        End If
+        
+        Set ChildFormElementXML = FormsElementXML.getElementsByTagName("EB").Item(0)
+        If Not ChildFormElementXML Is Nothing Then
+        If Not ChildFormElementXML.getAttribute("EH") And (Not IsEmpty(ChildFormElementXML.getAttribute("EH")) Or Not IsNull(ChildFormElementXML.getAttribute("EH"))) Then
+            ActiveWorkbook.Names("Forms.MN.DR.OJ.EB.EH.").RefersToRange = ChildFormElementXML.getAttribute("EH")
+        End If
+            ActiveWorkbook.Names("Forms.MN.DR.OJ.EB.EK.").RefersToRange = ChildFormElementXML.getAttribute("EK")
+        End If
+        
+        Set ChildFormElementXML = FormsElementXML.getElementsByTagName("EM").Item(0)
+        If Not ChildFormElementXML Is Nothing Then
+            If Not ChildFormElementXML.getAttribute("EQ") And (Not IsEmpty(ChildFormElementXML.getAttribute("EQ")) Or Not IsNull(ChildFormElementXML.getAttribute("EQ"))) Then
+               ActiveWorkbook.Names("Forms.MN.DR.OJ.EM.EQ.").RefersToRange = ChildFormElementXML.getAttribute("EQ")
+            End If
+            ActiveWorkbook.Names("Forms.MN.DR.OJ.EM.EZ.").RefersToRange = ChildFormElementXML.getAttribute("EZ")
+        End If
+        Call filladditionalitems(FormsElementXML, status)
+        'QA/QC
+        'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("QAC").Item(0)
+        'If Not ChildFormElementXML Is Nothing Then
+            'ActiveWorkbook.Names("Forms.MN.DR.QAC.QTD.").RefersToRange = ChildFormElementXML.getAttribute("QTD")
+        'End If
+        'Weather
+        '.Winds
+        Set ChildFormElementXML = FormsElementXML.getElementsByTagName("ZX").Item(0)
+        If Not ChildFormElementXML Is Nothing Then
+            ActiveWorkbook.Names("Forms.MN.DR.ZW.ZX.ZY.").RefersToRange = ChildFormElementXML.getAttribute("ZY")
+            ActiveWorkbook.Names("Forms.MN.DR.ZW.ZX.ZZ.").RefersToRange = ChildFormElementXML.getAttribute("ZZ")
+            If Not IsNull(ChildFormElementXML.getAttribute("SPEED")) And ChildFormElementXML.getAttribute("SPEED") <> "" Then
+            ActiveWorkbook.Names("Forms.MN.DR.ZW.ZX.SPEED.").RefersToRange = ChildFormElementXML.getAttribute("SPEED")
+        End If
+        If Not IsNull(ChildFormElementXML.getAttribute("DIRECTION")) And ChildFormElementXML.getAttribute("DIRECTION") <> "" Then
+            ActiveWorkbook.Names("Forms.MN.DR.ZW.ZX.DIRECTION.").RefersToRange = ChildFormElementXML.getAttribute("DIRECTION")
+        End If
+    
+    End If
+    
+    '.General
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("GEN").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.ZW.GEN.CLO.").RefersToRange = ChildFormElementXML.getAttribute("CLO")
+        ActiveWorkbook.Names("Forms.MN.DR.ZW.GEN.RAI.").RefersToRange = ChildFormElementXML.getAttribute("RAI")
+       If Not IsNull(ChildFormElementXML.getAttribute("CLOUDY")) And ChildFormElementXML.getAttribute("CLOUDY") <> "" Then
+            ActiveWorkbook.Names("Forms.MN.DR.ZW.GEN.CLOUDY.").RefersToRange = ChildFormElementXML.getAttribute("CLOUDY")
+        End If
+        If Not IsNull(ChildFormElementXML.getAttribute("RAIN")) And ChildFormElementXML.getAttribute("RAIN") <> "" Then
+            ActiveWorkbook.Names("Forms.MN.DR.ZW.GEN.RAIN.").RefersToRange = ChildFormElementXML.getAttribute("RAIN")
+        End If
+    End If
+                  
+    Call filladditionalitems(FormsElementXML, status)
+
+    
+    
+    'Hide the Additional Project Data Table in Report
+    'Additional Project Data Table
+    'Dim IStDte As String
+    ''Set ChildFormNodeListXML = FormsElementXML.getElementsByTagName("PDS").Item(0)
+    'If Not ChildFormNodeListXML Is Nothing Then
+        'Set ChildFormNodeList = ChildFormNodeListXML.getElementsByTagName("ADI")
+        'arDynamicElem = Split(ActiveWorkbook.Names("Forms.Marine3D.Summary.AddData").RefersToRange, ",")
+       ' ActiveWorkbook.Names("Forms.MN.DR.PDS\100\ADI.COB.").RefersToRange = IStDte
+
+        
+        'For i = 0 To ChildFormNodeList.Length - 1
+           ' Set ChildFormElementXML = ChildFormNodeList.Item(i)
+            'If i < 3 Or (Not IsNull(ChildFormElementXML.getAttribute("COA")) And ChildFormElementXML.getAttribute("COA") <> "") Or (Not IsNull(ChildFormElementXML.getAttribute("COB")) And ChildFormElementXML.getAttribute("COB") <> "") Or (Not IsNull(ChildFormElementXML.getAttribute("COC")) And ChildFormElementXML.getAttribute("COC") <> "") Or (Not IsNull(ChildFormElementXML.getAttribute("COD")) And ChildFormElementXML.getAttribute("COD") <> "") Or (Not IsNull(ChildFormElementXML.getAttribute("COE")) And ChildFormElementXML.getAttribute("COE") <> "") Or (Not IsNull(ChildFormElementXML.getAttribute("COF")) And ChildFormElementXML.getAttribute("COF") <> "") Or (Not IsNull(ChildFormElementXML.getAttribute("COG")) And ChildFormElementXML.getAttribute("COG") <> "") Or (Not IsNull(ChildFormElementXML.getAttribute("COH")) And ChildFormElementXML.getAttribute("COH") <> "") Then
+                'If i >= UBound(arDynamicElem) Then
+                    'OperationSummaryAdding ActiveSheet.Name, "AddProjMaxRow", "AddProjMinRow", "AddProjNextIndexCount", "AddProjRange", "AddProjSubRanges", "AddProjNames", "AddProjRefersTo", "UpdatedSheetName", "AddProjChangeTrackerAddIndx", "Forms.Marine3D.Summary.AddData", "AddProjIndex"
+                  '  lIndx = ActiveWorkbook.Names("AddProjNextIndexCount").RefersToRange - 1
+            
+                   ' ActiveWorkbook.Names("CommentsMaxRow").RefersToRange = ActiveWorkbook.Names("CommentsMaxRow").RefersToRange + 1
+                   ' ActiveWorkbook.Names("CommentsMinRow").RefersToRange = ActiveWorkbook.Names("CommentsMinRow").RefersToRange + 1
+                    '---3
+                    'ActiveWorkbook.Names("DocsMaxRowName").RefersToRange = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange + 1
+                    'ActiveWorkbook.Names("DocsMinRow").RefersToRange = ActiveWorkbook.Names("DocsMinRow").RefersToRange + 1
+                   
+                   'ActiveSheet.Unprotect StrPassWord
+               ' Else
+                    'lIndx = arDynamicElem(i)
+                'End If
+            
+               ' If Not IsNull(ChildFormElementXML.getAttribute("COA")) Then
+                   'ActiveWorkbook.Names("Forms.MN.DR.PDS\" & lIndx & "\ADI.COA.").RefersToRange = ChildFormElementXML.getAttribute("COA")
+                'End If
+                'If Not IsNull(ChildFormElementXML.getAttribute("COB")) Then
+                   'ActiveWorkbook.Names("Forms.MN.DR.PDS\" & lIndx & "\ADI.COB.").RefersToRange = ChildFormElementXML.getAttribute("COB")
+               ' End If
+                'If Not IsNull(ChildFormElementXML.getAttribute("COC")) Then
+                   'ActiveWorkbook.Names("Forms.MN.DR.PDS\" & lIndx & "\ADI.COC.").RefersToRange = ChildFormElementXML.getAttribute("COC")
+               ' End If
+                'If Not IsNull(ChildFormElementXML.getAttribute("COD")) Then
+                   'ActiveWorkbook.Names("Forms.MN.DR.PDS\" & lIndx & "\ADI.COD.").RefersToRange = ChildFormElementXML.getAttribute("COD")
+                'End If
+                'If Not IsNull(ChildFormElementXML.getAttribute("COE")) Then
+                   'ActiveWorkbook.Names("Forms.MN.DR.PDS\" & lIndx & "\ADI.COE.").RefersToRange = ChildFormElementXML.getAttribute("COE")
+               ' End If
+               ' If Not IsNull(ChildFormElementXML.getAttribute("COF")) Then
+                   'ActiveWorkbook.Names("Forms.MN.DR.PDS\" & lIndx & "\ADI.COF.").RefersToRange = ChildFormElementXML.getAttribute("COF")
+               ' End If
+                'If Not IsNull(ChildFormElementXML.getAttribute("COG")) Then
+                   'ActiveWorkbook.Names("Forms.MN.DR.PDS\" & lIndx & "\ADI.COG.").RefersToRange = ChildFormElementXML.getAttribute("COG")
+                'End If
+                'If Not IsNull(ChildFormElementXML.getAttribute("COH")) Then
+                   'ActiveWorkbook.Names("Forms.MN.DR.PDS\" & lIndx & "\ADI.COH.").RefersToRange = ChildFormElementXML.getAttribute("COH")
+                'End If
+                     
+                'If Not IsNull(ChildFormElementXML.getAttribute("PDSID")) Then
+                   ' ActiveWorkbook.Names("Forms.MN.DR.PDS\" & lIndx & "\ADI.PDSID.").RefersToRange = ChildFormElementXML.getAttribute("PDSID")
+                'End If
+                'DelString = "Forms.MN.DR.PDS\" & lIndx & "\ADI.PDSID."
+           ' End If
+       ' Next
+        
+    'End If
+    'Comments
+    '.Comment
+    Set ChildFormNodeListXML = FormsElementXML.getElementsByTagName("COM").Item(0)
+    If Not ChildFormNodeListXML Is Nothing Then
+        Set ChildFormNodeList = ChildFormNodeListXML.getElementsByTagName("CDO")
+        arDynamicElem = Split(ActiveWorkbook.Names("Forms.Marine3D.Summary.Comments").RefersToRange, ",")
+        For i = 0 To ChildFormNodeList.Length - 1
+            Set ChildFormElementXML = ChildFormNodeList.Item(i)
+            If i < 2 Or (Not IsNull(ChildFormElementXML.Text) And ChildFormElementXML.Text <> "") Then
+                    If i >= UBound(arDynamicElem) Then
+                        OperationSummaryAdding ActiveSheet.Name, "CommentsMaxRow", "CommentsMinRow", "CommentsNextIndexCount", "CommentsRange", "CommentsSubRanges", "CommentsNames", "CommentsRefersTo", "UpdatedSheetName", "CommentsChangeTrackerAddIndx", "Forms.Marine3D.Summary.Comments", "CommentsIndex"
+                        lIndx = ActiveWorkbook.Names("CommentsNextIndexCount").RefersToRange - 1
+                    '----4
+                        ActiveWorkbook.Names("DocsMaxRowName").RefersToRange = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange + 1
+                        ActiveWorkbook.Names("DocsMinRow").RefersToRange = ActiveWorkbook.Names("DocsMinRow").RefersToRange + 1
+                        
+                        ActiveSheet.Unprotect StrPassWord
+                    Else
+                        lIndx = arDynamicElem(i)
+                    End If
+                    ActiveWorkbook.Names("Forms.MN.DR.COM\" & lIndx & "\CON.CDO").RefersToRange = ChildFormElementXML.Text
+                
+                If Not IsNull(ChildFormElementXML.getAttribute("COMID")) Then
+                    ActiveWorkbook.Names("Forms.MN.DR.COM\" & lIndx & "\CON.COMID.").RefersToRange = ChildFormElementXML.getAttribute("COMID")
+                End If
+                DelString = "Forms.MN.DR.COM\" & lIndx & "\CON.COMID"
+            End If
+        Next
+    End If
+    
+     '----------------New Added
+    Dim lMinRow As Long, lHeaderDocRow As Long
+    lMinRow = ActiveWorkbook.Names("DocsMinRow").RefersToRange
+    lHeaderDocRow = lMinRow - 1
+    If (FormsElementXML.getAttribute("DRTRANS") <= 2) Then
+        ActiveSheet.Shapes("cmdDocumentsAdd").Visible = True
+        ActiveSheet.Shapes("cmdDocsRemove").Visible = True
+        ActiveSheet.Rows(lHeaderDocRow & ":" & lMinRow).Select
+        Selection.EntireRow.Hidden = False
+    Else
+        ActiveSheet.Shapes("cmdDocumentsAdd").Visible = False
+        ActiveSheet.Shapes("cmdDocsRemove").Visible = False
+        ActiveSheet.Rows(lHeaderDocRow & ":" & lMinRow).Select
+        Selection.EntireRow.Hidden = True
+    End If
+    '----------
+    
+    Range("E2").Select
+
+    Application.DisplayAlerts = True
+    ActiveWorkbook.Protect StrPassWord, Structure:=True, Windows:=False
+    ActiveSheet.Protect StrPassWord, DrawingObjects:=True, Contents:=True, Scenarios:=True
+    Exit Function
+err_trap:
+        FillForm = "Macro Name : FillForm " + Err.Description
+End Function
+Public Function filladditionalitems(FormsElementXML As Object, formstatus As Integer)
+Dim ChildFormElementXML As Object
+'TimeCharge
+
+
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("GT").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.GT.GM.").RefersToRange = ChildFormElementXML.getAttribute("GM")
+        ActiveWorkbook.Names("Forms.MN.DR.GT.BF.").RefersToRange = ChildFormElementXML.getAttribute("BF")
+        ActiveWorkbook.Names("Forms.MN.DR.GT.FB.").RefersToRange = ChildFormElementXML.getAttribute("FB")
+        Range("AB" & ActiveWorkbook.Names("Forms.MN.DR.GT.GD.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GD") - ChildFormElementXML.getAttribute("GM")
+        Range("AC" & ActiveWorkbook.Names("Forms.MN.DR.GT.GH.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GH") - ChildFormElementXML.getAttribute("GM")
+        Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.GT.GK.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GK") - ChildFormElementXML.getAttribute("GM")
+        Range("AB" & ActiveWorkbook.Names("Forms.MN.DR.GT.BG.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BG") - ChildFormElementXML.getAttribute("BF")
+        Range("AC" & ActiveWorkbook.Names("Forms.MN.DR.GT.BJ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BJ") - ChildFormElementXML.getAttribute("BF")
+        Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.GT.BO.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BO") - ChildFormElementXML.getAttribute("BF")
+        Range("AB" & ActiveWorkbook.Names("Forms.MN.DR.GT.FD.").RefersToRange.Row) = ChildFormElementXML.getAttribute("FD") - ChildFormElementXML.getAttribute("FB")
+        Range("AC" & ActiveWorkbook.Names("Forms.MN.DR.GT.FU.").RefersToRange.Row) = ChildFormElementXML.getAttribute("FU") - ChildFormElementXML.getAttribute("FB")
+        Range("AZ" & ActiveWorkbook.Names("Forms.MN.DR.GT.FX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("FX") - ChildFormElementXML.getAttribute("FB")
+    End If
+    
+    'TimeAllocation
+    
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("GV").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.GV.GW.").RefersToRange = ChildFormElementXML.getAttribute("GW")
+        ActiveWorkbook.Names("Forms.MN.DR.GV.BQ.").RefersToRange = ChildFormElementXML.getAttribute("BQ")
+        'ActiveWorkbook.Names("Forms.MN.DR.GV.WB.").RefersToRange = ChildFormElementXML.getAttribute("WB")
+        ActiveWorkbook.Names("Forms.MN.DR.GV.WE.").RefersToRange = ChildFormElementXML.getAttribute("WE")
+        ActiveWorkbook.Names("Forms.MN.DR.GV.QI.").RefersToRange = ChildFormElementXML.getAttribute("QI")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.GX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GX") - ChildFormElementXML.getAttribute("GW")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.GZ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GZ") - ChildFormElementXML.getAttribute("GW")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.JR.").RefersToRange.Row) = ChildFormElementXML.getAttribute("JR") - ChildFormElementXML.getAttribute("GW")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.BU.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BU") - ChildFormElementXML.getAttribute("BQ")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.BX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BX") - ChildFormElementXML.getAttribute("BQ")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.BZ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BZ") - ChildFormElementXML.getAttribute("BQ")
+        'Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.WC.").RefersToRange.Row) = ChildFormElementXML.getAttribute("WC") - ChildFormElementXML.getAttribute("WB")
+        'Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.WF.").RefersToRange.Row) = ChildFormElementXML.getAttribute("WF") - ChildFormElementXML.getAttribute("WB")
+        'Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.WI.").RefersToRange.Row) = ChildFormElementXML.getAttribute("WI") - ChildFormElementXML.getAttribute("WB")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.WQ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("WQ") - ChildFormElementXML.getAttribute("WE")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.WH.").RefersToRange.Row) = ChildFormElementXML.getAttribute("WH") - ChildFormElementXML.getAttribute("WE")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.WS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("WS") - ChildFormElementXML.getAttribute("WE")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.QE.").RefersToRange.Row) = ChildFormElementXML.getAttribute("QE") - ChildFormElementXML.getAttribute("QI")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.QG.").RefersToRange.Row) = ChildFormElementXML.getAttribute("QG") - ChildFormElementXML.getAttribute("QI")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.QK.").RefersToRange.Row) = ChildFormElementXML.getAttribute("QK") - ChildFormElementXML.getAttribute("QI")
+      End If
+    
+    'Client Support in Time Allocation
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("UP").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+       ' ActiveWorkbook.Names("Forms.MN.DR.GV.UP.UF.").RefersToRange = ChildFormElementXML.getAttribute("UF")
+        'Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.UP.UH.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UH") - ChildFormElementXML.getAttribute("UF")
+        'Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.UP.UJ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UJ") - ChildFormElementXML.getAttribute("UF")
+        'Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.UP.UL.").RefersToRange.Row) = ChildFormElementXML.getAttribute("UL") - ChildFormElementXML.getAttribute("UF")
+    'End If
+    
+    'EQUIPMENT TEST
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("Q").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.GV.Q.VO.").RefersToRange = ChildFormElementXML.getAttribute("VO")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.Q.K.").RefersToRange.Row) = ChildFormElementXML.getAttribute("K") - ChildFormElementXML.getAttribute("VO")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.Q.VH.").RefersToRange.Row) = ChildFormElementXML.getAttribute("VH") - ChildFormElementXML.getAttribute("VO")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.Q.VU.").RefersToRange.Row) = ChildFormElementXML.getAttribute("VU") - ChildFormElementXML.getAttribute("VO")
+    End If
+    
+    'LINE TEST
+   ' Set ChildFormElementXML = FormsElementXML.getElementsByTagName("VG").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+     '   ActiveWorkbook.Names("Forms.MN.DR.GV.VG.VJ.").RefersToRange = ChildFormElementXML.getAttribute("VJ")
+      '  Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.VG.VK.").RefersToRange.Row) = ChildFormElementXML.getAttribute("VK") - ChildFormElementXML.getAttribute("VJ")
+       ' Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.VG.VQ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("VQ") - ChildFormElementXML.getAttribute("VJ")
+        'Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.VG.VW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("VW") - ChildFormElementXML.getAttribute("VJ")
+    'End If
+    
+    'WAIT FOR SPREAD
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("VY").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.GV.VY.VZ.").RefersToRange = ChildFormElementXML.getAttribute("VZ")
+        'Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.VY.XW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("XW") - ChildFormElementXML.getAttribute("VZ")
+        'Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.VY.XM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("XM") - ChildFormElementXML.getAttribute("VZ")
+        'Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.VY.XH.").RefersToRange.Row) = ChildFormElementXML.getAttribute("XH") - ChildFormElementXML.getAttribute("VZ")
+  'End If
+    
+    'PERMITTING
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("XR").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.GV.XR.XT.").RefersToRange = ChildFormElementXML.getAttribute("XT")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.XR.XK.").RefersToRange.Row) = ChildFormElementXML.getAttribute("XK") - ChildFormElementXML.getAttribute("XT")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.XR.XO.").RefersToRange.Row) = ChildFormElementXML.getAttribute("XO") - ChildFormElementXML.getAttribute("XT")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.XR.XV.").RefersToRange.Row) = ChildFormElementXML.getAttribute("XV") - ChildFormElementXML.getAttribute("XT")
+        
+    End If
+    
+    'ENVIRONMENT
+    'Set ChildFormElementXML = FormsElementXML.getElementsByTagName("XI").Item(0)
+    'If Not ChildFormElementXML Is Nothing Then
+        'ActiveWorkbook.Names("Forms.MN.DR.GV.XI.XD.").RefersToRange = ChildFormElementXML.getAttribute("XD")
+        'Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.GV.XI.XC.").RefersToRange.Row) = ChildFormElementXML.getAttribute("XC") - ChildFormElementXML.getAttribute("XD")
+        ''Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.GV.XI.XG.").RefersToRange.Row) = ChildFormElementXML.getAttribute("XG") - ChildFormElementXML.getAttribute("XD")
+        'Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.GV.XI.XJ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("XJ") - ChildFormElementXML.getAttribute("XD")
+    'End If
+    
+    'HSE.Event
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("XY").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.XZ.").RefersToRange = ChildFormElementXML.getAttribute("XZ")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YF.").RefersToRange = ChildFormElementXML.getAttribute("YF")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YT.").RefersToRange = ChildFormElementXML.getAttribute("YT")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YD.").RefersToRange = ChildFormElementXML.getAttribute("YD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YU.").RefersToRange = ChildFormElementXML.getAttribute("YU")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YH.").RefersToRange = ChildFormElementXML.getAttribute("YH")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YHD.").RefersToRange = ChildFormElementXML.getAttribute("YHD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RWD.").RefersToRange = ChildFormElementXML.getAttribute("RWD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.LWD.").RefersToRange = ChildFormElementXML.getAttribute("LWD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.IDX.").RefersToRange = ChildFormElementXML.getAttribute("IDX")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RWDD.").RefersToRange = ChildFormElementXML.getAttribute("RWDD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.PID.").RefersToRange = ChildFormElementXML.getAttribute("PID")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YN.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YN") - ChildFormElementXML.getAttribute("XZ")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YM") - ChildFormElementXML.getAttribute("XZ")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YI.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YI") - ChildFormElementXML.getAttribute("XZ")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YA.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YA") - ChildFormElementXML.getAttribute("YF")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YC.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YC") - ChildFormElementXML.getAttribute("YF")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YS") - ChildFormElementXML.getAttribute("YF")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YW") - ChildFormElementXML.getAttribute("YT")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YB.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YB") - ChildFormElementXML.getAttribute("YT")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.FAT.").RefersToRange.Row) = ChildFormElementXML.getAttribute("FAT") - ChildFormElementXML.getAttribute("YT")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YG.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YG") - ChildFormElementXML.getAttribute("YD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YJ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YJ") - ChildFormElementXML.getAttribute("YD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YK.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YK") - ChildFormElementXML.getAttribute("YD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YV.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YV") - ChildFormElementXML.getAttribute("YU")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YX.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YX") - ChildFormElementXML.getAttribute("YU")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YY.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YY") - ChildFormElementXML.getAttribute("YU")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YR.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YR") - ChildFormElementXML.getAttribute("YH")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.ZM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZM") - ChildFormElementXML.getAttribute("YH")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.ZH.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZH") - ChildFormElementXML.getAttribute("YH")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YRW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("YRW") - ChildFormElementXML.getAttribute("YHD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.ZMM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZMM") - ChildFormElementXML.getAttribute("YHD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.ZHS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZHS") - ChildFormElementXML.getAttribute("YHD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RWW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RWW") - ChildFormElementXML.getAttribute("RWD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RWM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RWM") - ChildFormElementXML.getAttribute("RWD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RWS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RWS") - ChildFormElementXML.getAttribute("RWD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.LWW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("LWW") - ChildFormElementXML.getAttribute("LWD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.LWM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("LWM") - ChildFormElementXML.getAttribute("LWD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.LWS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("LWS") - ChildFormElementXML.getAttribute("LWD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.IIW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IIW") - ChildFormElementXML.getAttribute("IDX")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.IMM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IMM") - ChildFormElementXML.getAttribute("IDX")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.IIS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("IIS") - ChildFormElementXML.getAttribute("IDX")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RWDW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RWDW") - ChildFormElementXML.getAttribute("RWDD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RWDM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RWDM") - ChildFormElementXML.getAttribute("RWDD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RWDS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RWDS") - ChildFormElementXML.getAttribute("RWDD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.PIW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("PIW") - ChildFormElementXML.getAttribute("PID")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.PIM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("PIM") - ChildFormElementXML.getAttribute("PID")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.XY.PIS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("PIS") - ChildFormElementXML.getAttribute("PID")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.YCM.").RefersToRange = ChildFormElementXML.getAttribute("YCM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.FCM.").RefersToRange = ChildFormElementXML.getAttribute("FCM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.FTC.").RefersToRange = ChildFormElementXML.getAttribute("FTC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.LTC.").RefersToRange = ChildFormElementXML.getAttribute("LTC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.MCM.").RefersToRange = ChildFormElementXML.getAttribute("MCM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.HRC.").RefersToRange = ChildFormElementXML.getAttribute("HRC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.HRCC.").RefersToRange = ChildFormElementXML.getAttribute("HRCC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.LCM.").RefersToRange = ChildFormElementXML.getAttribute("LCM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.ICM.").RefersToRange = ChildFormElementXML.getAttribute("ICM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RCM.").RefersToRange = ChildFormElementXML.getAttribute("RCM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.RDCM.").RefersToRange = ChildFormElementXML.getAttribute("RDCM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.XY.PIC.").RefersToRange = ChildFormElementXML.getAttribute("PIC")
+        
+    
+    End If
+    
+    'Control
+    Set ChildFormElementXML = FormsElementXML.getElementsByTagName("ZC").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZD.").RefersToRange = ChildFormElementXML.getAttribute("ZD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZA.").RefersToRange = ChildFormElementXML.getAttribute("ZA")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZB.").RefersToRange = ChildFormElementXML.getAttribute("ZB")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZBD.").RefersToRange = ChildFormElementXML.getAttribute("ZBD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZJ.").RefersToRange = ChildFormElementXML.getAttribute("ZJ")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZJD.").RefersToRange = ChildFormElementXML.getAttribute("ZJD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZP.").RefersToRange = ChildFormElementXML.getAttribute("ZP")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PRD.").RefersToRange = ChildFormElementXML.getAttribute("PRD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.RIDD.").RefersToRange = ChildFormElementXML.getAttribute("RIDD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.TKD.").RefersToRange = ChildFormElementXML.getAttribute("TKD")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZR.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZR") - ChildFormElementXML.getAttribute("ZD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZI.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZI") - ChildFormElementXML.getAttribute("ZD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZL.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZL") - ChildFormElementXML.getAttribute("ZD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZU.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZU") - ChildFormElementXML.getAttribute("ZA")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZT.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZT") - ChildFormElementXML.getAttribute("ZA")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZS") - ChildFormElementXML.getAttribute("ZA")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZF.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZF") - ChildFormElementXML.getAttribute("ZB")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZG.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZG") - ChildFormElementXML.getAttribute("ZB")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZE.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZE") - ChildFormElementXML.getAttribute("ZB")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZK.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZK") - ChildFormElementXML.getAttribute("ZJ")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZN.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZN") - ChildFormElementXML.getAttribute("ZJ")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZO.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZO") - ChildFormElementXML.getAttribute("ZJ")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZQ.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZQ") - ChildFormElementXML.getAttribute("ZP")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.RIR.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RIR") - ChildFormElementXML.getAttribute("ZP")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZV.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZV") - ChildFormElementXML.getAttribute("ZP")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZFW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZFW") - ChildFormElementXML.getAttribute("ZBD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZGM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZGM") - ChildFormElementXML.getAttribute("ZBD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZES.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZES") - ChildFormElementXML.getAttribute("ZBD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZKW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZKW") - ChildFormElementXML.getAttribute("ZJD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZNM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZNM") - ChildFormElementXML.getAttribute("ZJD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZOS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("ZOS") - ChildFormElementXML.getAttribute("ZJD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PRW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("PRW") - ChildFormElementXML.getAttribute("PRD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PRM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("PRM") - ChildFormElementXML.getAttribute("PRD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PRS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("PRS") - ChildFormElementXML.getAttribute("PRD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.RIW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RIW") - ChildFormElementXML.getAttribute("RIDD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.RIM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RIM") - ChildFormElementXML.getAttribute("RIDD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.RIS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("RIS") - ChildFormElementXML.getAttribute("RIDD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.TKW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TKW") - ChildFormElementXML.getAttribute("TKD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.TKM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TKM") - ChildFormElementXML.getAttribute("TKD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.TKS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("TKS") - ChildFormElementXML.getAttribute("TKD")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ZCM.").RefersToRange = ChildFormElementXML.getAttribute("ZCM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.ACM.").RefersToRange = ChildFormElementXML.getAttribute("ACM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.TCM.").RefersToRange = ChildFormElementXML.getAttribute("TCM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.TCMC.").RefersToRange = ChildFormElementXML.getAttribute("TCMC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.RCIM.").RefersToRange = ChildFormElementXML.getAttribute("RCIM")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PRCS.").RefersToRange = ChildFormElementXML.getAttribute("PRCS")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.RIC.").RefersToRange = ChildFormElementXML.getAttribute("RIC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.TKC.").RefersToRange = ChildFormElementXML.getAttribute("TKC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MCMS.").RefersToRange = ChildFormElementXML.getAttribute("MCMS")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MCMH.").RefersToRange = ChildFormElementXML.getAttribute("MCMH")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.JPLTSD.").RefersToRange = ChildFormElementXML.getAttribute("JPLTSD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.DPLTSD.").RefersToRange = ChildFormElementXML.getAttribute("DPLTSD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GPLTSD.").RefersToRange = ChildFormElementXML.getAttribute("GPLTSD")
+        
+        'Waste Management Treatment
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BDGKD.").RefersToRange = ChildFormElementXML.getAttribute("BDGKD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PWCD.").RefersToRange = ChildFormElementXML.getAttribute("PWCD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MKGD.").RefersToRange = ChildFormElementXML.getAttribute("MKGD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MDKD.").RefersToRange = ChildFormElementXML.getAttribute("MDKD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BKGD.").RefersToRange = ChildFormElementXML.getAttribute("BKGD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.OKGD.").RefersToRange = ChildFormElementXML.getAttribute("OKGD")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.JPLTSW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("JPLTSW") - ChildFormElementXML.getAttribute("JPLTSD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.JPLTSM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("JPLTSM") - ChildFormElementXML.getAttribute("JPLTSD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.JPLTSS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("JPLTSS") - ChildFormElementXML.getAttribute("JPLTSD")
+       
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.DPLTSW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DPLTSW") - ChildFormElementXML.getAttribute("DPLTSD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.DPLTSM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DPLTSM") - ChildFormElementXML.getAttribute("DPLTSD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.DPLTSS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DPLTSS") - ChildFormElementXML.getAttribute("DPLTSD")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GPLTSW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GPLTSW") - ChildFormElementXML.getAttribute("GPLTSD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GPLTSM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GPLTSM") - ChildFormElementXML.getAttribute("GPLTSD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GPLTSS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GPLTSS") - ChildFormElementXML.getAttribute("GPLTSD")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BDGKW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BDGKW") - ChildFormElementXML.getAttribute("BDGKD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BDGKM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BDGKM") - ChildFormElementXML.getAttribute("BDGKD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BDGKS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BDGKS") - ChildFormElementXML.getAttribute("BDGKD")
+               
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PWCW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("PWCW") - ChildFormElementXML.getAttribute("PWCD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PWCM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("PWCM") - ChildFormElementXML.getAttribute("PWCD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PWCS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("PWCS") - ChildFormElementXML.getAttribute("PWCD")
+              
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MKGW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("MKGW") - ChildFormElementXML.getAttribute("MKGD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MKGM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("MKGM") - ChildFormElementXML.getAttribute("MKGD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MKGS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("MKGS") - ChildFormElementXML.getAttribute("MKGD")
+              
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MDKW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("MDKW") - ChildFormElementXML.getAttribute("MDKD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MDKM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("MDKM") - ChildFormElementXML.getAttribute("MDKD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MDKS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("MDKS") - ChildFormElementXML.getAttribute("MDKD")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BKGW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BKGW") - ChildFormElementXML.getAttribute("BKGD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BKGM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BKGM") - ChildFormElementXML.getAttribute("BKGD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BKGS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BKGS") - ChildFormElementXML.getAttribute("BKGD")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.OKGW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("OKGW") - ChildFormElementXML.getAttribute("OKGD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.OKGM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("OKGM") - ChildFormElementXML.getAttribute("OKGD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.OKGS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("OKGS") - ChildFormElementXML.getAttribute("OKGD")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.JPLTSC.").RefersToRange = ChildFormElementXML.getAttribute("JPLTSC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.DPLTSC.").RefersToRange = ChildFormElementXML.getAttribute("DPLTSC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GPLTSC.").RefersToRange = ChildFormElementXML.getAttribute("GPLTSC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BDGKC.").RefersToRange = ChildFormElementXML.getAttribute("BDGKC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.PWCC.").RefersToRange = ChildFormElementXML.getAttribute("PWCC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MKGC.").RefersToRange = ChildFormElementXML.getAttribute("MKGC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.MDKC.").RefersToRange = ChildFormElementXML.getAttribute("MDKC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BKGC.").RefersToRange = ChildFormElementXML.getAttribute("BKGC")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.OKGER.").RefersToRange = ChildFormElementXML.getAttribute("OKGER")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFHD.").RefersToRange = ChildFormElementXML.getAttribute("THFHD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFPD.").RefersToRange = ChildFormElementXML.getAttribute("THFPD")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFHW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("THFHW") - ChildFormElementXML.getAttribute("THFHD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFHM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("THFHM") - ChildFormElementXML.getAttribute("THFHD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFHS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("THFHS") - ChildFormElementXML.getAttribute("THFHD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFHC.").RefersToRange = ChildFormElementXML.getAttribute("THFHC")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFPW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("THFPW") - ChildFormElementXML.getAttribute("THFPD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFPM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("THFPM") - ChildFormElementXML.getAttribute("THFPD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFPS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("THFPS") - ChildFormElementXML.getAttribute("THFPD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.THFPC.").RefersToRange = ChildFormElementXML.getAttribute("THFPC")
+        
+     
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.WCLD.").RefersToRange = ChildFormElementXML.getAttribute("WCLD")
+        'ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.WCLW.").RefersToRange = ChildFormElementXML.getAttribute("WCLW")
+        'ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.WCLM.").RefersToRange = ChildFormElementXML.getAttribute("WCLM")
+        'ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.WCLS.").RefersToRange = ChildFormElementXML.getAttribute("WCLS")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.WCLC.").RefersToRange = ChildFormElementXML.getAttribute("WCLC")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.WCLW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("WCLW") - ChildFormElementXML.getAttribute("WCLD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.WCLM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("WCLM") - ChildFormElementXML.getAttribute("WCLD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.WCLS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("WCLS") - ChildFormElementXML.getAttribute("WCLD")
+        
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWLD.").RefersToRange = ChildFormElementXML.getAttribute("BWLD")
+        'ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWLW.").RefersToRange = ChildFormElementXML.getAttribute("BWLW")
+        'ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWLM.").RefersToRange = ChildFormElementXML.getAttribute("BWLM")
+        'ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWLS.").RefersToRange = ChildFormElementXML.getAttribute("BWLS")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWLC.").RefersToRange = ChildFormElementXML.getAttribute("BWLC")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWLW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BWLW") - ChildFormElementXML.getAttribute("BWLD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWLM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BWLM") - ChildFormElementXML.getAttribute("BWLD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWLS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BWLS") - ChildFormElementXML.getAttribute("BWLD")
+        
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWLD.").RefersToRange = ChildFormElementXML.getAttribute("GWLD")
+        'ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWLW.").RefersToRange = ChildFormElementXML.getAttribute("GWLW")
+        'ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWLM.").RefersToRange = ChildFormElementXML.getAttribute("GWLM")
+        'ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWLS.").RefersToRange = ChildFormElementXML.getAttribute("GWLS")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWLC.").RefersToRange = ChildFormElementXML.getAttribute("GWLC")
+        
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWLW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GWLW") - ChildFormElementXML.getAttribute("GWLD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWLM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GWLM") - ChildFormElementXML.getAttribute("GWLD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWLS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GWLS") - ChildFormElementXML.getAttribute("GWLD")
+        
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.CEKD.").RefersToRange = ChildFormElementXML.getAttribute("CEKD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.CEKW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("CEKW") - ChildFormElementXML.getAttribute("CEKD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.CEKM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("CEKM") - ChildFormElementXML.getAttribute("CEKD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.CEKS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("CEKS") - ChildFormElementXML.getAttribute("CEKD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.CEKC.").RefersToRange = ChildFormElementXML.getAttribute("CEKC")
+        
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWD.").RefersToRange = ChildFormElementXML.getAttribute("BWD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BWW") - ChildFormElementXML.getAttribute("BWD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BWM") - ChildFormElementXML.getAttribute("BWD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BWS") - ChildFormElementXML.getAttribute("BWD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.BWC.").RefersToRange = ChildFormElementXML.getAttribute("BWC")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWD.").RefersToRange = ChildFormElementXML.getAttribute("GWD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GWW") - ChildFormElementXML.getAttribute("GWD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GWM") - ChildFormElementXML.getAttribute("GWD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("GWS") - ChildFormElementXML.getAttribute("GWD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.ZC.GWC.").RefersToRange = ChildFormElementXML.getAttribute("GWC")
+        
+    End If
+    
+    'Traffic control
+   Set ChildFormElementXML = FormsElementXML.getElementsByTagName("TC").Item(0)
+    If Not ChildFormElementXML Is Nothing Then
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFD.").RefersToRange = ChildFormElementXML.getAttribute("HFD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HFW") - ChildFormElementXML.getAttribute("HFD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HFM") - ChildFormElementXML.getAttribute("HFD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HFS") - ChildFormElementXML.getAttribute("HFD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFC.").RefersToRange = ChildFormElementXML.getAttribute("HFC")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFHD.").RefersToRange = ChildFormElementXML.getAttribute("HFHD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFHW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HFHW") - ChildFormElementXML.getAttribute("HFHD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFHM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HFHM") - ChildFormElementXML.getAttribute("HFHD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFHS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("HFHS") - ChildFormElementXML.getAttribute("HFHD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.HFHC.").RefersToRange = ChildFormElementXML.getAttribute("HFHC")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.DPFD.").RefersToRange = ChildFormElementXML.getAttribute("DPFD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.DPFW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DPFW") - ChildFormElementXML.getAttribute("DPFD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.DPFM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DPFM") - ChildFormElementXML.getAttribute("DPFD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.DPFS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("DPFS") - ChildFormElementXML.getAttribute("DPFD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.DPFC.").RefersToRange = ChildFormElementXML.getAttribute("DPFC")
+        
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BLD.").RefersToRange = ChildFormElementXML.getAttribute("BLD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BLW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BLW") - ChildFormElementXML.getAttribute("BLD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BLM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BLM") - ChildFormElementXML.getAttribute("BLD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BLS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BLS") - ChildFormElementXML.getAttribute("BLD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BLC.").RefersToRange = ChildFormElementXML.getAttribute("BLC")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BSHD.").RefersToRange = ChildFormElementXML.getAttribute("BSHD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BSHW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BSHW") - ChildFormElementXML.getAttribute("BSHD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BSHM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BSHM") - ChildFormElementXML.getAttribute("BSHD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BSHS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("BSHS") - ChildFormElementXML.getAttribute("BSHD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.BSHC.").RefersToRange = ChildFormElementXML.getAttribute("BSHC")
+        
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.VDD.").RefersToRange = ChildFormElementXML.getAttribute("VDD")
+        Range("AK" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.VDW.").RefersToRange.Row) = ChildFormElementXML.getAttribute("VDW") - ChildFormElementXML.getAttribute("VDD")
+        Range("AL" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.VDM.").RefersToRange.Row) = ChildFormElementXML.getAttribute("VDM") - ChildFormElementXML.getAttribute("VDD")
+        Range("AM" & ActiveWorkbook.Names("Forms.MN.DR.XX.TC.VDS.").RefersToRange.Row) = ChildFormElementXML.getAttribute("VDS") - ChildFormElementXML.getAttribute("VDD")
+        ActiveWorkbook.Names("Forms.MN.DR.XX.TC.VDC.").RefersToRange = ChildFormElementXML.getAttribute("VDC")
+        
+     End If
+End Function
+
+Public Function GetSetting(ParamName As String) As String
+    Dim objRegKey As Object
+    Dim errmsg, ErrSrc, errhelp, errcontext, ErrNumber
+    Dim OrchReg As Object
+    Set OrchReg = CreateObject("RegObj.Registry")
+    On Error Resume Next
+    
+    Set objRegKey = OrchReg.RegKeyFromString("\HKEY_LOCAL_MACHINE\SOFTWARE\PointCross\Orchestra")
+    
+    If Err Then
+        If Err.Number = 35006 Then
+            errmsg = Err.Description
+            ErrSrc = Err.Source
+            errhelp = Err.HelpFile
+            errcontext = Err.HelpContext
+            ErrNumber = Err.Number
+            On Error GoTo 0
+            Err.Raise ErrNumber, "GetSetting: " & ErrSrc, "Key Does not exists: " & errmsg & vbNewLine & " Key : " & ParamName & vbNewLine & " HelpFile: " & errhelp & vbNewLine & " Helpcontext:" & errcontext
+        Else
+            errmsg = Err.Description
+            ErrSrc = Err.Source
+            errhelp = Err.HelpFile
+            errcontext = Err.HelpContext
+            ErrNumber = Err.Number
+            On Error GoTo 0
+            Err.Raise ErrNumber, "GetSetting: " & ErrSrc, "Unknown Error: " & errmsg & vbNewLine & " Key : " & ParamName & vbNewLine & " HelpFile: " & errhelp & vbNewLine & " Helpcontext:" & errcontext
+        End If
+        
+    End If
+    GetSetting = objRegKey.Values(ParamName).Value
+    If Err Then
+        If Err.Number = 35006 Then
+            errmsg = Err.Description
+            ErrSrc = Err.Source
+            errhelp = Err.HelpFile
+            errcontext = Err.HelpContext
+            ErrNumber = Err.Number
+            On Error GoTo 0
+            Err.Raise ErrNumber, "GetSetting: " & ErrSrc, "Invalid Param Name: " & errmsg & vbNewLine & " Key : " & ParamName & vbNewLine & " HelpFile: " & errhelp & vbNewLine & " Helpcontext:" & errcontext
+        Else
+            errmsg = Err.Description
+            ErrSrc = Err.Source
+            errhelp = Err.HelpFile
+            errcontext = Err.HelpContext
+            ErrNumber = Err.Number
+            On Error GoTo 0
+            Err.Raise ErrNumber, "GetSetting: " & ErrSrc, "Unknown Error1: " & errmsg & vbNewLine & " Key : " & ParamName & vbNewLine & " HelpFile: " & errhelp & vbNewLine & " Helpcontext:" & errcontext
+        End If
+    End If
+
+    Set OrchReg = Nothing
+    Set objRegKey = Nothing
+End Function
+Public Function GetReportDate() As Variant
+    GetReportDate = ActiveWorkbook.Names("Forms.ReportDate.").RefersToRange
+End Function
+Public Sub DocsAddRow(ByVal sheetname As String, ByVal strMaxRow As String, ByVal strMinRow As String, ByVal strRowRange As String, ByVal strMaxRowRange As String)
+    Dim lMaxRow As Long, strBrowseBtLocation As String
+    Dim arDynamicElem, nNum As Integer, i As Integer
+    Dim strRow  As String, strRange As String, strMaxRange As String, strSubRanges As String, subRanges As String
+    
+    lMaxRow = ActiveWorkbook.Names(strMaxRow).RefersToRange
+    strBrowseBtLocation = "F" & lMaxRow
+    
+     strRange = ActiveWorkbook.Names(strRowRange).RefersToRange
+     strMaxRange = Replace(strRange, "-ROWNO", lMaxRow)
+     Range(strMaxRange).Select
+     Selection.EntireRow.Insert
+     
+     strSubRanges = ActiveWorkbook.Names(strMaxRowRange).RefersToRange
+     subRanges = Replace(strSubRanges, "-ROWNO", lMaxRow)
+     arDynamicElem = Split(subRanges, ",")
+       
+      If Range("B" & lMaxRow - 1).Text <> "" Then
+        For i = 0 To UBound(arDynamicElem) 'To 0
+            strRow = arDynamicElem(i)
+            If i = 0 Then
+                 Range(strRow).Select
+                 With Selection
+                     
+                      .HorizontalAlignment = xlGeneral
+                      .VerticalAlignment = xlBottom
+                      .WrapText = True
+                      .AddIndent = False
+                      .ShrinkToFit = False
+                      .MergeCells = True
+                      .Borders.LineStyle = xlContinuous
+                      .Font.Size = 12
+                 End With
+                 
+                 Browse_click lMaxRow
+             Else
+                Dim iDomainStartCell As Integer, iDomainEndCell As Integer
+                iDomainStartCell = ActiveWorkbook.Names("DocDomainStartCell").RefersToRange
+                iDomainEndCell = ActiveWorkbook.Names("DocDomainEndCell").RefersToRange
+                Range(strRow).Select
+                With Selection.Validation
+                    .Delete
+                    .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:= _
+                    xlBetween, Formula1:="=$CA$" & iDomainStartCell & ":$CA$" & iDomainEndCell
+                    .IgnoreBlank = True
+                    .InCellDropdown = True
+                    .InputTitle = ""
+                    .ErrorTitle = ""
+                    .InputMessage = ""
+                    .ErrorMessage = ""
+                    .ShowInput = True
+                    .ShowError = True
+                End With
+                Selection.Borders(xlDiagonalDown).LineStyle = xlNone
+                Selection.Borders(xlDiagonalUp).LineStyle = xlNone
+                With Selection.Borders(xlEdgeLeft)
+                    .LineStyle = xlContinuous
+                    .Weight = xlThin
+                    .ColorIndex = xlAutomatic
+                End With
+                With Selection.Borders(xlEdgeTop)
+                    .LineStyle = xlContinuous
+                    .Weight = xlThin
+                    .ColorIndex = xlAutomatic
+                End With
+                With Selection.Borders(xlEdgeBottom)
+                    .LineStyle = xlContinuous
+                    .Weight = xlThin
+                    .ColorIndex = xlAutomatic
+                End With
+                With Selection.Borders(xlEdgeRight)
+                    .LineStyle = xlContinuous
+                    .Weight = xlThin
+                    .ColorIndex = xlAutomatic
+                End With
+             End If
+            
+        Next i
+       Else
+            Browse_click lMaxRow - 1
+            lMaxRow = lMaxRow - 1
+       End If
+        ActiveSheet.Cells.Range("I" & lMaxRow).Select
+        ActiveWorkbook.Names("DocsMaxRowName").RefersToRange = lMaxRow + 1
+           
+End Sub
+Public Sub DocumentsRemove(ByVal sheetname As String, ByVal MaxRowName As String, ByVal MinRowName As String, ByVal RowRange As String, returnflg As Integer)
+    Dim objSelDocsRow As Range, ModEvent As Object
+    Dim StartLine As Long
+    Dim HowManyLines As Long
+    Dim lRowNum As Long, lColNum As Long, lMinRowValue As Long, lMaxRowValue As Long, strCmdBrowseButtonName As String
+    Dim lMinimumRowsCount As Long
+        
+    Set objSelDocsRow = Selection
+    Sheets(sheetname).Select
+    lRowNum = objSelDocsRow.Row
+    lColNum = objSelDocsRow.Column
+    lMinRowValue = ActiveWorkbook.Names(MinRowName).RefersToRange
+    lMaxRowValue = ActiveWorkbook.Names(MaxRowName).RefersToRange
+    lMinimumRowsCount = lMaxRowValue - lMinRowValue
+    If lMinimumRowsCount > 1 Then
+        If lRowNum < lMinRowValue Or lRowNum >= lMaxRowValue Then
+            Exit Sub
+        ElseIf lColNum < 2 Or lColNum > 6 Then
+            Exit Sub
+        End If
+    Else
+        If lRowNum = lMinRowValue Then
+            Range("B" & lRowNum & ":" & "H" & lRowNum).ClearContents
+            Range("I" & lRowNum).Select
+            Selection.ClearContents
+            Exit Sub
+        Else
+            Exit Sub
+        End If
+    End If
+        Range(lRowNum & ":" & lRowNum).Select
+        Selection.EntireRow.Delete
+        Range("B" & lRowNum - 1 & ":" & "H" & lRowNum - 1).Select
+        returnflg = 1
+End Sub
+Public Sub Browse_click(iCurRow)
+    Dim XSLPath As Variant, i As Integer
+    Dim IsExist As Integer, lMinRowValue As Long, lMaxRowValue As Long, lMinimumRowsCount As Long, iChkDocExistCnt As Integer
+    Dim strExtractFilename As String, j As Integer
+    
+        XSLPath = Application.GetOpenFilename _
+            (FileFilter:="Excel Filer (*.*),*.*", _
+            Title:="Select the Document")
+            lMinRowValue = ActiveWorkbook.Names("DocsMinRow").RefersToRange
+            lMaxRowValue = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange
+            lMinimumRowsCount = lMaxRowValue - lMinRowValue
+        
+        If (XSLPath = False) Then
+            'after clicking cancel of the open window to remove the cell created for the pupose of holding the doc
+            If lMinimumRowsCount = 1 Then
+                If Range("B" & lMinRowValue).Text <> "" Then
+                    Range(iCurRow & ":" & iCurRow).Select
+                    Selection.EntireRow.Delete
+                    Range("B" & iCurRow - 1 & ":" & "H" & iCurRow - 1).Select
+                    Selection.Locked = True
+                Else
+                    Range(lMaxRowValue & ":" & lMaxRowValue).Select 'for the first attachment cancel event
+                    Selection.EntireRow.Delete
+                    Range("B" & lMaxRowValue - 1 & ":" & "H" & lMaxRowValue - 1).Select
+                    Selection.Locked = True
+                End If
+            Else
+                Range(iCurRow & ":" & iCurRow).Select
+                Selection.EntireRow.Delete
+                Range("B" & iCurRow - 1 & ":" & "H" & iCurRow - 1).Select
+                Selection.Locked = True
+            End If
+            ActiveWorkbook.Protect "pcrossypf23"
+            ActiveSheet.Protect "pcrossypf23"
+            End
+        End If
+        
+        strExtractFilename = Right(XSLPath, Len(XSLPath) - InStrRev(XSLPath, "\"))
+        iChkDocExistCnt = lMinRowValue
+        For j = 0 To iChkDocExistCnt - 1
+            If InStr(Range("B" & iChkDocExistCnt).Text, strExtractFilename) > 0 Then
+                MsgBox "The file is already selected"
+                Range(iCurRow & ":" & iCurRow).Select
+                Selection.EntireRow.Delete
+                Range("B" & iCurRow - 1 & ":" & "H" & iCurRow - 1).Select
+                ActiveWorkbook.Protect "pcrossypf23"
+                ActiveSheet.Protect "pcrossypf23"
+                End
+            End If
+            iChkDocExistCnt = iChkDocExistCnt + 1
+        Next j
+        
+        
+        If lMinimumRowsCount = 1 And Range("B" & lMinRowValue).Text = "" Then
+            Range("B" & iCurRow) = XSLPath
+            Dim iDomainStartCell As Integer, iDomainEndCell As Integer
+            iDomainStartCell = ActiveWorkbook.Names("DocDomainStartCell").RefersToRange
+            iDomainEndCell = ActiveWorkbook.Names("DocDomainEndCell").RefersToRange
+                Range("I" & iCurRow).Select  'TO PUT VALIDATIONLIST FOR THE FIRST DOC ROW
+                With Selection.Validation
+                    .Delete
+                    .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:= _
+                    xlBetween, Formula1:="=$CA$" & iDomainStartCell & ":$CA$" & iDomainEndCell
+                    .IgnoreBlank = True
+                    .InCellDropdown = True
+                    .InputTitle = ""
+                    .ErrorTitle = ""
+                    .InputMessage = ""
+                    .ErrorMessage = ""
+                    .ShowInput = True
+                    .ShowError = True
+                End With
+            Range(lMaxRowValue & ":" & lMaxRowValue).Select
+            Selection.EntireRow.Delete
+            Range("B" & iCurRow & ":" & "H" & iCurRow).Select
+            Selection.Locked = True
+        Else
+            Range("B" & lMaxRowValue) = XSLPath
+            Range("B" & lMaxRowValue & ":" & "H" & lMaxRowValue).Select
+            Selection.Locked = True
+        End If
+        
+End Sub
+
+Public Function SaveRpt(ByVal OpnOL As Integer) As String
+     If ActiveWorkbook.Names("RCYCLE").RefersToRange = 5 Then
+                Dim TempFilePath As String, TempFileName As String
+                Dim Destwb As Workbook
+                Dim fso
+                With Application
+                    .ScreenUpdating = False
+                    .EnableEvents = False
+                End With
+                TempFilePath = ActiveWorkbook.Path & "\"
+                TempFileName = UCase(PCIntToStringMonths(Range("F2").Value)) & "_" & ActiveWorkbook.Names("Forms.C.PT").RefersToRange & "_ " & ActiveWorkbook.Names("Forms.C.RT.").RefersToRange & ".xls"
+                
+                    Application.DisplayAlerts = False
+                    ActiveWorkbook.SaveAs (TempFilePath & TempFileName)
+                
+                With Application
+                    .ScreenUpdating = True
+                    .EnableEvents = True
+                    .DisplayAlerts = True
+                End With
+           
+      End If
+End Function
+
+
+
+Public Sub openOutlookMail(ByVal Flag As Integer)
+        
+    Dim ContextMailID As String, Reportname As String, objOL, objMail, lMinRow, DocCnt, lMaxRow
+    
+    lMinRow = ActiveWorkbook.Names("DocsMinRow").RefersToRange
+    DocCnt = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange - ActiveWorkbook.Names("DocsMinRow").RefersToRange
+    lMaxRow = ActiveWorkbook.Names("DocsMaxRowName").RefersToRange
+        
+        ContextMailID = ActiveWorkbook.Names("ORCHCONTEXTEMAILID").RefersToRange
+            If ActiveWorkbook.Names("RCYCLE").RefersToRange = 5 Then   'added for discrete
+                Dim TempFilePath As String, TempFileName As String
+                With Application
+                    .ScreenUpdating = False
+                    .EnableEvents = False
+                End With
+                TempFilePath = ActiveWorkbook.Path & "\"
+                TempFileName = UCase(PCIntToStringMonths(Range("F2").Value)) & "_" & ActiveWorkbook.Names("Forms.C.PT").RefersToRange & "_ " & ActiveWorkbook.Names("Forms.C.RT.").RefersToRange & ".xls"
+               
+                Application.DisplayAlerts = False
+                ActiveWorkbook.SaveAs (TempFilePath & TempFileName)
+                
+                With Application
+                    .ScreenUpdating = True
+                    .EnableEvents = True
+                    .DisplayAlerts = True
+                End With
+            Else
+         
+                 ActiveWorkbook.Save
+            End If
+         
+ChngRepPath:
+            Reportname = ActiveWorkbook.Path & "\" & ActiveWorkbook.Name
+             Set objOL = CreateObject("Outlook.Application")
+             Set objMail = objOL.CreateItem(0)
+             
+             Dim strDomain As String
+             
+             strDomain = Mid(ContextMailID, InStr(1, ContextMailID, "@"))
+             Dim i
+             If Flag = 0 Then
+                With objMail
+                .To = ContextMailID
+                .Subject = "Geophysical Activity Reporting System"
+                On Error GoTo ChkErr
+                .attachments.Add Reportname
+                For i = 0 To DocCnt - 1
+                    If Range("B" & lMinRow).Text <> "" Then
+                        .attachments.Add Range("B" & lMinRow).Text
+                        lMinRow = lMinRow + 1
+                    End If
+                Next
+                .Display
+                End With
+             ElseIf Flag = 1 Then
+                With objMail
+                .To = "ApproveDR" & strDomain
+                .Subject = "Approve Geophysical Activity Report"
+                On Error GoTo ChkErr
+                .attachments.Add Reportname
+                For i = 0 To DocCnt - 1
+                    If Range("B" & lMinRow).Text <> "" Then
+                        .attachments.Add Range("B" & lMinRow).Text
+                        lMinRow = lMinRow + 1
+                    End If
+                Next
+                .Display
+                End With
+             Else
+                With objMail
+                .To = "RejectDR" & strDomain
+                .Subject = "Reject Geophysical Activity Report"
+                On Error GoTo ChkErr
+                .attachments.Add Reportname
+                For i = 0 To DocCnt - 1
+                    If Range("B" & lMinRow).Text <> "" Then
+                        .attachments.Add Range("B" & lMinRow).Text
+                        lMinRow = lMinRow + 1
+                    End If
+                Next
+                .Display
+                End With
+             End If
+             
+             
+             Set objMail = Nothing
+             Set objOL = Nothing
+             
+                 Exit Sub
+    
+ChkErr:
+    Dim SaveAsPath
+    SaveAsPath = Application.GetSaveAsFilename(ActiveWorkbook.Name)
+    If SaveAsPath = False Then
+        Exit Sub
+    Else
+        Application.DisplayAlerts = False
+        Application.ActiveWorkbook.SaveAs (SaveAsPath)
+       
+    End If
+    GoTo ChngRepPath
+End Sub
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
